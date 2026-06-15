@@ -1,0 +1,7 @@
+venv/          → your virtual environment (too large)
+__pycache__/   → Python auto generated cache files
+*.pyc          → compiled Python files
+.env           → contains your passwords and secret keys
+db.sqlite3     → local database
+media/         → uploaded images (too large)
+*.log          → log files
