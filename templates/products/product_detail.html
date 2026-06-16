@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        {% if product.image %}
+            <img src="{{ product.image.url }}" 
+                 class="img-fluid rounded"
+                 style="max-height:400px; width:100%; object-fit:cover;">
+        {% else %}
+            <div class="bg-secondary rounded" style="height:400px;"></div>
+        {% endif %}
+
+        {% if images %}
+            <div class="d-flex gap-2 mt-3">
+                {% for img in images %}
+                    <img src="{{ img.image.url }}" 
+                         style="width:80px; height:80px; object-fit:cover;"
+                         class="rounded border">
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-6">
+        <h2>{{ product.name }}</h2>
+
+        <div class="my-3">
+            <h4 class="text-primary">₹{{ product.price }}</h4>
+            {% if product.discount > 0 %}
+                <span class="badge bg-success">
+                    {{ product.discount }}% OFF
+                </span>
+            {% endif %}
+        </div>
+
+        <p class="text-muted">{{ product.description }}</p>
+
+        <p>
+            {% if product.stock > 0 %}
+                <span class="text-success">
+                    ✓ In Stock ({{ product.stock }} available)
+                </span>
+            {% else %}
+                <span class="text-danger">Out of Stock</span>
+            {% endif %}
+        </p>
+
+        <p>
+            <strong>Category:</strong> 
+            {{ product.category.name }}
+        </p>
+
+        <p>
+            <strong>Seller:</strong> 
+            {{ product.seller.username }}
+        </p>
+
+        <div class="d-flex gap-2 mt-4">
+            <button class="btn btn-warning btn-lg">
+                Add to Cart
+            </button>
+            <button class="btn btn-outline-danger btn-lg">
+                Add to Wishlist
+            </button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

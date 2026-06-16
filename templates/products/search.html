@@ -2,18 +2,8 @@
 
 {% block content %}
 
-<div class="mb-4">
-    <h4>Shop by Category</h4>
-    <div class="d-flex flex-wrap gap-2">
-        {% for category in categories %}
-            <a href="#" class="btn btn-outline-secondary">
-                {{ category.name }}
-            </a>
-        {% endfor %}
-    </div>
-</div>
 
-<h4>Products</h4>
+<h4>Search results for "{{ query }}"</h4>
 <div class="row">
     {% for product in products %}
     <div class="col-md-3 mb-4">
