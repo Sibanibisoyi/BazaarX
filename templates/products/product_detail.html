@@ -64,9 +64,10 @@
         Add to Cart
     </button>
 </form>
-            <button class="btn btn-outline-danger btn-lg">
-                Add to Wishlist
-            </button>
+           <a href="{% url 'extras:add_to_wishlist' product.id %}"
+   class="btn btn-outline-danger btn-lg">
+    Add to Wishlist
+</a> 
         </div>
     </div>
 </div>
