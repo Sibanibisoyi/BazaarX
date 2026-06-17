@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2 class="mb-4">Your Cart</h2>
+
+{% if items %}
+<div class="row">
+    <div class="col-md-8">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>
+                        {% if item.product.image %}
+                            <img src="{{ item.product.image.url }}"
+                                 style="width:60px; height:60px; object-fit:cover;">
+                        {% endif %}
+                        {{ item.product.name }}
+                    </td>
+                    <td>₹{{ item.product.price }}</td>
+                    <td>
+                        <form method="POST"
+                              action="{% url 'cart:update_cart' item.id %}">
+                            {% csrf_token %}
+                            <input type="number"
+                                   name="quantity"
+                                   value="{{ item.quantity }}"
+                                   min="0"
+                                   style="width:60px;"
+                                   class="form-control">
+                            <button type="submit"
+                                    class="btn btn-sm btn-secondary mt-1">
+                                Update
+                            </button>
+                        </form>
+                    </td>
+                    <td>₹{{ item.product.price }}</td>
+                    <td>
+                        <a href="{% url 'cart:remove_from_cart' item.id %}"
+                           class="btn btn-danger btn-sm">
+                            Remove
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5>Order Summary</h5>
+                <hr>
+                <div class="d-flex justify-content-between">
+                    <span>Total:</span>
+                    <strong>₹{{ total }}</strong>
+                </div>
+                <hr>
+                <a href="#"
+                   class="btn btn-warning w-100 mb-2">
+                    Proceed to Checkout
+                </a>
+                <a href="{% url 'products:home' %}"
+                   class="btn btn-outline-secondary w-100">
+                    Continue Shopping
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="text-center mt-5">
+    <h4>Your cart is empty</h4>
+    <a href="{% url 'products:home' %}"
+       class="btn btn-primary mt-3">
+        Start Shopping
+    </a>
+</div>
+{% endif %}
+
+{% endblock %}
