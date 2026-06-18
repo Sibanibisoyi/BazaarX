@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="text-center mt-5">
+    <h2 class="text-success">Order Placed Successfully!</h2>
+    <p>Your order ID is <strong>#{{ order.id }}</strong></p>
+    <p>Status: <strong>{{ order.status }}</strong></p>
+    <p>Total: <strong>₹{{ order.total_price }}</strong></p>
+
+    <div class="mt-4">
+        <a href="{% url 'orders:my_orders' %}"
+           class="btn btn-primary me-2">
+            View My Orders
+        </a>
+        <a href="{% url 'products:home' %}"
+           class="btn btn-outline-secondary">
+            Continue Shopping
+        </a>
+    </div>
+</div>
+
+{% endblock %}

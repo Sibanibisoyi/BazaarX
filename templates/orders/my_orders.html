@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2 class="mb-4">My Orders</h2>
+
+{% if orders %}
+<table class="table">
+    <thead>
+        <tr>
+            <th>Order ID</th>
+            <th>Date</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for order in orders %}
+        <tr>
+            <td>#{{ order.id }}</td>
+            <td>{{ order.created_at|date:"d M Y" }}</td>
+            <td>₹{{ order.total_price }}</td>
+            <td>
+                <span class="badge bg-warning">
+                    {{ order.status }}
+                </span>
+            </td>
+            <td>
+                <a href="{% url 'orders:order_detail' order.id %}"
+                   class="btn btn-sm btn-primary">
+                    View Details
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% else %}
+<div class="text-center mt-5">
+    <h4>No orders yet</h4>
+    <a href="{% url 'products:home' %}"
+       class="btn btn-primary mt-3">
+        Start Shopping
+    </a>
+</div>
+{% endif %}
+
+{% endblock %}
