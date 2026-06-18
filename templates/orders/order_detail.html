@@ -32,9 +32,28 @@
         <div class="card">
             <div class="card-body">
                 <h5>Order Info</h5>
-                <p>Status:
-                    <strong>{{ order.status }}</strong>
-                </p>
+                <div class="mt-3">
+    <h6>Order Tracking</h6>
+    <div class="d-flex justify-content-between mb-1">
+        <span>Pending</span>
+        <span>Confirmed</span>
+        <span>Shipped</span>
+        <span>Delivered</span>
+    </div>
+    <div class="progress">
+        {% if order.status == 'pending' %}
+            <div class="progress-bar bg-warning" style="width:25%">Pending</div>
+        {% elif order.status == 'confirmed' %}
+            <div class="progress-bar bg-info" style="width:50%">Confirmed</div>
+        {% elif order.status == 'shipped' %}
+            <div class="progress-bar bg-primary" style="width:75%">Shipped</div>
+        {% elif order.status == 'delivered' %}
+            <div class="progress-bar bg-success" style="width:100%">Delivered</div>
+        {% else %}
+            <div class="progress-bar bg-danger" style="width:100%">Cancelled</div>
+        {% endif %}
+    </div>
+</div>
                 <p>Total:
                     <strong>₹{{ order.total_price }}</strong>
                 </p>
