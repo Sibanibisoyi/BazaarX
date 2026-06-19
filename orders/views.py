@@ -4,6 +4,10 @@ from django.contrib import messages
 from .models import Order, OrderItem
 from cart.models import Cart, CartItem
 from users.models import Address
+import razorpay
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+
 
 # Create your views here.
 @login_required
@@ -69,4 +73,43 @@ def order_detail(request, order_id):
         'items': items,
     })
 
+@login_required
+def initiate_payment(request, order_id):
+    order = get_object_or_404(Order ,id=order_id, user=request.user)
+    client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+    amount = order.total_price * 100
+    razorpay_order = client.order.create({
+        'amount': int(amount),
+            'currency': 'INR',
+            'payment_capture': 1
+        })
+    return render(request, 'orders/payment.html', {
+    'order': order,
+    'razorpay_order': razorpay_order,
+    'key_id': settings.RAZORPAY_KEY_ID,
+})
 
+
+@csrf_exempt
+def payment_success(request):
+    if request.method == 'POST':
+        payment_id = request.POST.get('razorpay_payment_id')
+        razorpay_order_id = request.POST.get('razorpay_order_id')
+        signature = request.POST.get('razorpay_signature')
+
+        client = razorpay.Client(
+            auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
+        )
+
+        try:
+            client.utility.verify_payment_signature({
+                'razorpay_order_id': razorpay_order_id,
+                'razorpay_payment_id': payment_id,
+                'razorpay_signature': signature
+            })
+            messages.success(request, 'Payment successful')
+            return redirect('orders:my_orders')
+
+        except:
+            messages.error(request, 'Payment verification failed')
+            return redirect('orders:my_orders')

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4>Complete Payment</h4>
+            </div>
+            <div class="card-body">
+                <p>Order ID: <strong>#{{ order.id }}</strong></p>
+                <p>Amount: <strong>₹{{ order.total_price }}</strong></p>
+
+                <form method="POST" action="{% url 'orders:payment_success' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="razorpay_payment_id" id="razorpay_payment_id">
+                    <input type="hidden" name="razorpay_order_id" id="razorpay_order_id">
+                    <input type="hidden" name="razorpay_signature" id="razorpay_signature">
+
+                    <button type="button"
+                            id="pay-btn"
+                            class="btn btn-warning btn-lg w-100">
+                        Pay ₹{{ order.total_price }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    var options = {
+        key: "{{ key_id }}",
+        amount: "{{ razorpay_order.amount }}",
+        currency: "INR",
+        order_id: "{{ razorpay_order.id }}",
+        handler: function(response) {
+            document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
+            document.getElementById('razorpay_order_id').value = response.razorpay_order_id;
+            document.getElementById('razorpay_signature').value = response.razorpay_signature;
+            document.querySelector('form').submit();
+        },
+        prefill: {
+            name: "{{ request.user.username }}",
+            email: "{{ request.user.email }}"
+        },
+        theme: {
+            color: "#F37254"
+        }
+    };
+
+    document.getElementById('pay-btn').onclick = function() {
+        var rzp = new Razorpay(options);
+        rzp.open();
+    }
+</script>
+
+{% endblock %}

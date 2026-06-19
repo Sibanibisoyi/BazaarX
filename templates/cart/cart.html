@@ -62,10 +62,41 @@
             <div class="card-body">
                 <h5>Order Summary</h5>
                 <hr>
+                <form method="POST" action="{% url 'coupons:apply_coupon' %}">
+    {% csrf_token %}
+    <div class="input-group mb-3">
+        <input type="text"
+               name="coupon_code"
+               class="form-control"
+               placeholder="Enter coupon code">
+        <button class="btn btn-outline-secondary" type="submit">
+            Apply
+        </button>
+    </div>
+</form>
+
+{% if coupon %}
+<p class="text-success">
+    Coupon {{ coupon.code }} applied ({{ coupon.discount }}% off)
+</p>
+{% endif %}
                 <div class="d-flex justify-content-between">
-                    <span>Total:</span>
-                    <strong>₹{{ total }}</strong>
-                </div>
+    <span>Subtotal:</span>
+    <span>₹{{ total }}</span>
+</div>
+
+{% if discount_amount %}
+<div class="d-flex justify-content-between text-success">
+    <span>Discount:</span>
+    <span>- ₹{{ discount_amount }}</span>
+</div>
+{% endif %}
+
+<hr>
+<div class="d-flex justify-content-between">
+    <strong>Total:</strong>
+    <strong>₹{{ discounted_total }}</strong>
+</div>
                 <hr>
                 <a href="{% url 'orders:checkout' %}"
                    class="btn btn-warning w-100 mb-2">

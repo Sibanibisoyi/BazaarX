@@ -8,6 +8,12 @@
     <p>Status: <strong>{{ order.status }}</strong></p>
     <p>Total: <strong>₹{{ order.total_price }}</strong></p>
 
+
+    <a href="{% url 'orders:initiate_payment' order.id %}"
+   class="btn btn-warning me-2">
+    Pay Now
+</a>
+
     <div class="mt-4">
         <a href="{% url 'orders:my_orders' %}"
            class="btn btn-primary me-2">
