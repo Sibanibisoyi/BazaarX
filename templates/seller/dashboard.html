@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between mb-4">
+    <h2>{{ seller.shop_name }} Dashboard</h2>
+    <div>
+        <a href="{% url 'seller:add_product' %}"
+           class="btn btn-success me-2">Add Product</a>
+        <a href="{% url 'seller:seller_orders' %}"
+           class="btn btn-primary">My Orders</a>
+    </div>
+</div>
+
+{% if not seller.is_approved %}
+<div class="alert alert-warning">
+    Your seller account is pending approval.
+</div>
+{% endif %}
+
+<h4>My Products</h4>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Product</th>
+            <th>Price</th>
+            <th>Stock</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for product in products %}
+        <tr>
+            <td>{{ product.name }}</td>
+            <td>₹{{ product.price }}</td>
+            <td>{{ product.stock }}</td>
+            <td>
+                <a href="{% url 'seller:edit_product' product.id %}"
+                   class="btn btn-sm btn-warning">Edit</a>
+                <a href="{% url 'seller:delete_product' product.id %}"
+                   class="btn btn-sm btn-danger">Delete</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4">No products yet</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
