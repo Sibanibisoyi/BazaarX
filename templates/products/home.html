@@ -1,6 +1,14 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<div class="mb-4">
+    <h4>⚡ Flash Sales 
+        <a href="{% url 'extras:flash_sale' %}" 
+           class="btn btn-sm btn-danger ms-2">
+            View All
+        </a>
+    </h4>
+</div>
 
 <div class="mb-4">
     <h4>Shop by Category</h4>
@@ -40,6 +48,10 @@
                    class="btn btn-primary btn-sm">
                     View Details
                 </a>
+                <a href="{% url 'products:add_to_compare' product.id %}"
+   class="btn btn-outline-secondary btn-sm mt-1">
+    Add to Compare
+</a>
             </div>
         </div>
     </div>

@@ -11,6 +11,13 @@
 </form>
         <div class="navbar-nav ms-auto">
             {% if user.is_authenticated %}
+            {% if user.is_staff %}
+<a class="nav-link" href="{% url 'dashboard:admin_dashboard' %}">
+    Admin Dashboard
+</a>
+<a class="nav-link" href="{% url 'extras:flash_sale' %}">Flash Sales</a>
+<a class="nav-link" href="{% url 'products:compare_products' %}">Compare</a>
+{% endif %}
                 <a class="nav-link" href="{% url 'orders:my_orders' %}">My Orders</a>
                 <a class="nav-link" href="{% url 'extras:wishlist_detail' %}">Wishlist</a>
                 <a class="nav-link" href="{% url 'cart:cart_detail' %}">

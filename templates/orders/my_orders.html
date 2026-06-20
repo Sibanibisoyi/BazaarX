@@ -31,6 +31,10 @@
                    class="btn btn-sm btn-primary">
                     View Details
                 </a>
+                <a href="{% url 'orders:generate_invoice' order.id %}"
+   class="btn btn-sm btn-secondary">
+    Download Invoice
+</a>
             </td>
         </tr>
         {% endfor %}

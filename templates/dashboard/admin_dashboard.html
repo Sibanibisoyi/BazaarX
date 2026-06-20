@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2 class="mb-4">Admin Dashboard</h2>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5>Total Orders</h5>
+                <h2>{{ total_orders }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5>Total Users</h5>
+                <h2>{{ total_users }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <h5>Total Products</h5>
+                <h2>{{ total_products }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <h5>Total Revenue</h5>
+                <h2>₹{{ total_revenue }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Sellers -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Pending Seller Approvals</h5>
+            </div>
+            <div class="card-body">
+                {% if pending_sellers %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Shop Name</th>
+                            <th>User</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for seller in pending_sellers %}
+                        <tr>
+                            <td>{{ seller.shop_name }}</td>
+                            <td>{{ seller.user.username }}</td>
+                            <td>
+                                <a href="{% url 'dashboard:approve_seller' seller.id %}"
+                                   class="btn btn-sm btn-success">
+                                    Approve
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p>No pending sellers</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Returns -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Pending Return Requests</h5>
+            </div>
+            <div class="card-body">
+                {% if pending_returns %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Order</th>
+                            <th>User</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for return in pending_returns %}
+                        <tr>
+                            <td>#{{ return.order.id }}</td>
+                            <td>{{ return.user.username }}</td>
+                            <td>
+                                <a href="{% url 'returns:approve_return' return.id %}"
+                                   class="btn btn-sm btn-success me-1">
+                                    Approve
+                                </a>
+                                <a href="{% url 'dashboard:reject_return' return.id %}"
+                                   class="btn btn-sm btn-danger">
+                                    Reject
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p>No pending returns</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Orders -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>Recent Orders</h5>
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>User</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in recent_orders %}
+                <tr>
+                    <td>#{{ order.id }}</td>
+                    <td>{{ order.user.username }}</td>
+                    <td>₹{{ order.total_price }}</td>
+                    <td>
+                        <span class="badge bg-warning">
+                            {{ order.status }}
+                        </span>
+                    </td>
+                    <td>{{ order.created_at|date:"d M Y" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Sales Chart -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>Revenue Overview</h5>
+    </div>
+    <div class="card-body">
+        <canvas id="revenueChart" height="100"></canvas>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Total Orders', 'Total Users', 'Total Products'],
+            datasets: [{
+                label: 'BazaarX Stats',
+                data: [{{ total_orders }}, {{ total_users }}, {{ total_products }}],
+                backgroundColor: ['#0d6efd', '#198754', '#ffc107'],
+            }]
+        },
+        options: {
+            responsive: true,
+        }
+    });
+</script>
+
+{% endblock %}

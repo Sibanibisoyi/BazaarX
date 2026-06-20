@@ -7,6 +7,10 @@ from users.models import Address
 import razorpay
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
+from utils.email_utils import send_order_confirmation_email
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+from weasyprint import HTML
 
 
 # Create your views here.
@@ -48,11 +52,15 @@ def place_order(request):
             item.product.stock -= item.quantity
             item.product.save()
         cart.cartitem_set.all().delete()
+        send_order_confirmation_email(order)
 
         return redirect('orders:order_confirmation', order_id=order.id)
     
     else:
         return redirect('checkout')
+    
+    
+
     
 @login_required
 def order_confirmation(request, order_id):
@@ -113,3 +121,20 @@ def payment_success(request):
         except:
             messages.error(request, 'Payment verification failed')
             return redirect('orders:my_orders')
+        
+@login_required
+def generate_invoice(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    items = order.orderitem_set.all()
+    html_string = render_to_string(
+        'orders/invoice.html',
+        {'order': order, 'items': items}
+    )
+
+    
+    pdf = HTML(string=html_string).write_pdf()
+
+    
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename=invoice_{order.id}.pdf'
+    return response

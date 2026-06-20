@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required
 from .models import Wishlist
 from products.models import Product
 from django.contrib import messages
+from django.utils import timezone
+from .models import Wishlist, FlashSale
 
 # Create your views here.
 @login_required
@@ -34,6 +36,18 @@ def wishlist_detail(request):
          'items' : items,
     })
 
+
+
+def flash_sale(request):
+    now = timezone.now()
+    sales = FlashSale.objects.filter(
+        is_active=True,
+        start_time__lte=now,
+        end_time__gte=now
+    )
+    return render(request,'extras/flash_sale.html',{
+        'sales' : sales,
+    })
 
 
 

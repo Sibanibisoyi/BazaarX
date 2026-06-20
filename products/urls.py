@@ -7,5 +7,7 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('products/<slug:slug>/', views.product_detail, name='product_detail'),
     path('search/', views.search, name='search'),
+    path('compare/', views.compare_products, name='compare_products'),
+    path('compare/add/<int:product_id>/',views.add_to_compare,name='add_to_compare')
 ]
 

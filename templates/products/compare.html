@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2 class="mb-4">Compare Products</h2>
+
+{% if products %}
+<div class="table-responsive">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Feature</th>
+                {% for product in products %}
+                <th class="text-center">{{ product.name }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Image</strong></td>
+                {% for product in products %}
+                <td class="text-center">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}"
+                             style="width:100px; height:100px; object-fit:cover;">
+                    {% else %}
+                        <div class="bg-secondary"
+                             style="width:100px; height:100px; margin:auto;">
+                        </div>
+                    {% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td><strong>Price</strong></td>
+                {% for product in products %}
+                <td class="text-center">₹{{ product.price }}</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td><strong>Discount</strong></td>
+                {% for product in products %}
+                <td class="text-center">{{ product.discount }}%</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td><strong>Stock</strong></td>
+                {% for product in products %}
+                <td class="text-center">
+                    {% if product.stock > 0 %}
+                        <span class="text-success">In Stock</span>
+                    {% else %}
+                        <span class="text-danger">Out of Stock</span>
+                    {% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td><strong>Category</strong></td>
+                {% for product in products %}
+                <td class="text-center">{{ product.category.name }}</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td><strong>Action</strong></td>
+                {% for product in products %}
+                <td class="text-center">
+                    <a href="{% url 'products:product_detail' product.slug %}"
+                       class="btn btn-primary btn-sm">
+                        View Details
+                    </a>
+                </td>
+                {% endfor %}
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<a href="{% url 'products:home' %}"
+   class="btn btn-outline-secondary mt-3">
+    Continue Shopping
+</a>
+
+{% else %}
+<div class="text-center mt-5">
+    <h4>No products to compare</h4>
+    <p>Add products to compare from product pages</p>
+    <a href="{% url 'products:home' %}"
+       class="btn btn-primary mt-3">
+        Start Shopping
+    </a>
+</div>
+{% endif %}
+
+{% endblock %}

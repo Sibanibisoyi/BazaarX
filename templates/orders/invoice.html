@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h1 { color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .total { font-weight: bold; font-size: 18px; }
+        .header { display: flex; justify-content: space-between; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div>
+        <h1>BazaarX</h1>
+        <p>Invoice</p>
+    </div>
+    <div>
+        <p>Order #{{ order.id }}</p>
+        <p>Date: {{ order.created_at|date:"d M Y" }}</p>
+    </div>
+</div>
+
+<hr>
+
+<div>
+    <h3>Bill To:</h3>
+    <p>{{ order.user.username }}</p>
+    <p>{{ order.user.email }}</p>
+    {% if order.address %}
+    <p>{{ order.address.full_name }}</p>
+    <p>{{ order.address.address_line }}</p>
+    <p>{{ order.address.city }}, {{ order.address.state }}</p>
+    <p>{{ order.address.pincode }}</p>
+    {% endif %}
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr>
+            <td>{{ item.product.name }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>₹{{ item.price }}</td>
+            <td>₹{{ item.price }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr>
+            <td colspan="3" class="total">Grand Total</td>
+            <td class="total">₹{{ order.total_price }}</td>
+        </tr>
+    </tfoot>
+</table>
+
+<p style="margin-top:40px;">Thank you for shopping with BazaarX!</p>
+
+</body>
+</html>

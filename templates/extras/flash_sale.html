@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2 class="mb-4">⚡ Flash Sales</h2>
+
+{% if sales %}
+<div class="row">
+    {% for sale in sales %}
+    <div class="col-md-3 mb-4">
+        <div class="card h-100 border-danger">
+            <div class="badge bg-danger position-absolute m-2">
+                FLASH SALE
+            </div>
+            {% if sale.product.image %}
+                <img src="{{ sale.product.image.url }}"
+                     class="card-img-top"
+                     style="height:200px; object-fit:cover;">
+            {% else %}
+                <div class="bg-secondary" style="height:200px;"></div>
+            {% endif %}
+
+            <div class="card-body">
+                <h5 class="card-title">{{ sale.product.name }}</h5>
+
+                <p class="mb-1">
+                    <span class="text-decoration-line-through text-muted">
+                        ₹{{ sale.product.price }}
+                    </span>
+                </p>
+
+                <p class="text-danger fw-bold fs-5">
+                    ₹{{ sale.sale_price }}
+                </p>
+
+                <p class="text-muted small">
+                    Ends: {{ sale.end_time|date:"d M Y H:i" }}
+                </p>
+
+                <div id="countdown-{{ sale.id }}"
+                     class="badge bg-warning text-dark mb-2">
+                </div>
+
+                <a href="{% url 'products:product_detail' sale.product.slug %}"
+                   class="btn btn-danger w-100">
+                    Buy Now
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% else %}
+<div class="text-center mt-5">
+    <h4>No active flash sales right now</h4>
+    <p>Check back later for amazing deals</p>
+    <a href="{% url 'products:home' %}"
+       class="btn btn-primary mt-3">
+        Continue Shopping
+    </a>
+</div>
+{% endif %}
+
+<script>
+{% for sale in sales %}
+(function() {
+    var endTime = new Date("{{ sale.end_time|date:'Y-m-d H:i:s' }}").getTime();
+    var countdownEl = document.getElementById("countdown-{{ sale.id }}");
+
+    var timer = setInterval(function() {
+        var now = new Date().getTime();
+        var distance = endTime - now;
+
+        if (distance < 0) {
+            clearInterval(timer);
+            countdownEl.innerHTML = "EXPIRED";
+            return;
+        }
+
+        var hours = Math.floor(distance / (1000 * 60 * 60));
+        var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        countdownEl.innerHTML = hours + "h " + minutes + "m " + seconds + "s remaining";
+    }, 1000);
+})();
+{% endfor %}
+</script>
+
+{% endblock %}
