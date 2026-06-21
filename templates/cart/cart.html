@@ -1,124 +1,176 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Shopping Cart | BazaarX{% endblock %}
 
 {% block content %}
+<div class="container mt-4 mb-5">
+    
+    <div class="d-flex align-items-center mb-4 pb-2 border-bottom">
+        <i class="fas fa-shopping-cart fs-3 text-primary-custom me-3"></i>
+        <h2 class="mb-0 fw-bold">Shopping Cart</h2>
+        <span class="badge bg-secondary ms-3 rounded-pill">{{ items|length }} Items</span>
+    </div>
 
-<h2 class="mb-4">Your Cart</h2>
+    {% if items %}
+    <div class="row g-4">
+        <!-- Cart Items -->
+        <div class="col-lg-8">
+            <div class="bg-white rounded shadow-sm border overflow-hidden">
+                <!-- Desktop Header -->
+                <div class="d-none d-md-flex row border-bottom bg-light p-3 text-muted fw-semibold small text-uppercase">
+                    <div class="col-6">Product Details</div>
+                    <div class="col-2 text-center">Quantity</div>
+                    <div class="col-2 text-center">Price</div>
+                    <div class="col-2 text-center">Total</div>
+                </div>
 
-{% if items %}
-<div class="row">
-    <div class="col-md-8">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Product</th>
-                    <th>Price</th>
-                    <th>Quantity</th>
-                    <th>Total</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
                 {% for item in items %}
-                <tr>
-                    <td>
-                        {% if item.product.image %}
-                            <img src="{{ item.product.image.url }}"
-                                 style="width:60px; height:60px; object-fit:cover;">
-                        {% endif %}
-                        {{ item.product.name }}
-                    </td>
-                    <td>₹{{ item.product.price }}</td>
-                    <td>
-                        <form method="POST"
-                              action="{% url 'cart:update_cart' item.id %}">
+                <div class="row align-items-center p-3 border-bottom position-relative">
+                    <!-- Remove Button (Mobile Top Right) -->
+                    <a href="{% url 'cart:remove_from_cart' item.id %}" class="btn-action text-danger position-absolute top-0 end-0 mt-3 me-3 d-md-none" style="width: 30px; height: 30px; z-index: 2;" title="Remove Item">
+                        <i class="fas fa-trash-alt"></i>
+                    </a>
+
+                    <!-- Product Detail -->
+                    <div class="col-12 col-md-6 mb-3 mb-md-0 d-flex align-items-center">
+                        <div class="border rounded p-2 text-center bg-white me-3" style="width: 80px; height: 80px; min-width: 80px;">
+                            {% if item.product.image %}
+                                <img src="{{ item.product.image.url }}" class="img-fluid" style="max-height: 100%; object-fit: contain;">
+                            {% else %}
+                                <img src="https://placehold.co/80x80/eeeeee/999999?text=Img" class="img-fluid">
+                            {% endif %}
+                        </div>
+                        <div>
+                            <a href="{% url 'products:product_detail' item.product.slug %}" class="text-decoration-none text-dark fw-bold hover-primary d-block mb-1 line-clamp-2">
+                                {{ item.product.name }}
+                            </a>
+                            <span class="badge bg-light text-dark border"><i class="fas fa-tag text-muted me-1"></i>{{ item.product.category.name }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Quantity -->
+                    <div class="col-4 col-md-2 d-flex flex-column align-items-md-center border-end border-md-0 pe-3 pe-md-0">
+                        <span class="d-md-none text-muted small mb-1">Qty</span>
+                        <form method="POST" action="{% url 'cart:update_cart' item.id %}" class="d-flex align-items-center">
                             {% csrf_token %}
-                            <input type="number"
-                                   name="quantity"
-                                   value="{{ item.quantity }}"
-                                   min="0"
-                                   style="width:60px;"
-                                   class="form-control">
-                            <button type="submit"
-                                    class="btn btn-sm btn-secondary mt-1">
-                                Update
+                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="10" class="form-control text-center px-1 py-1 shadow-sm" style="width: 50px; font-weight: 600;">
+                            <button type="submit" class="btn btn-sm text-primary-custom ms-1 p-1" title="Update Quantity">
+                                <i class="fas fa-sync-alt"></i>
                             </button>
                         </form>
-                    </td>
-                    <td>₹{{ item.product.price }}</td>
-                    <td>
-                        <a href="{% url 'cart:remove_from_cart' item.id %}"
-                           class="btn btn-danger btn-sm">
-                            Remove
+                    </div>
+
+                    <!-- Price -->
+                    <div class="col-4 col-md-2 text-center border-end border-md-0 px-2">
+                        <span class="d-md-none text-muted small mb-1 d-block">Price</span>
+                        <span class="fw-semibold">₹{{ item.product.price }}</span>
+                    </div>
+
+                    <!-- Total & Remove -->
+                    <div class="col-4 col-md-2 d-flex align-items-center justify-content-between justify-content-md-center ps-3 ps-md-0">
+                        <div>
+                            <span class="d-md-none text-muted small mb-1 d-block text-center">Total</span>
+                            <span class="fw-bold text-danger">₹<script>document.write({{ item.product.price }} * {{ item.quantity }})</script></span>
+                        </div>
+                        <a href="{% url 'cart:remove_from_cart' item.id %}" class="btn text-danger ms-auto d-none d-md-block hover-lift" title="Remove">
+                            <i class="fas fa-trash-alt"></i>
                         </a>
-                    </td>
-                </tr>
+                    </div>
+                </div>
                 {% endfor %}
-            </tbody>
-        </table>
-    </div>
+                
+                <!-- Action Bar -->
+                <div class="p-3 bg-light d-flex justify-content-between align-items-center">
+                    <a href="{% url 'products:home' %}" class="btn btn-outline-secondary fw-semibold">
+                        <i class="fas fa-arrow-left me-2"></i> Continue Shopping
+                    </a>
+                </div>
+            </div>
+        </div>
 
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5>Order Summary</h5>
-                <hr>
-                <form method="POST" action="{% url 'coupons:apply_coupon' %}">
-    {% csrf_token %}
-    <div class="input-group mb-3">
-        <input type="text"
-               name="coupon_code"
-               class="form-control"
-               placeholder="Enter coupon code">
-        <button class="btn btn-outline-secondary" type="submit">
-            Apply
-        </button>
-    </div>
-</form>
+        <!-- Order Summary Sidebar -->
+        <div class="col-lg-4">
+            <div class="bg-white rounded shadow-sm border p-4 sticky-top" style="top: 100px;">
+                <h5 class="fw-bold mb-4 border-bottom pb-2">Order Summary</h5>
+                
+                <!-- Coupon Form -->
+                <div class="mb-4 bg-light p-3 rounded border">
+                    <label class="form-label small fw-semibold text-muted mb-2"><i class="fas fa-ticket-alt me-1"></i> Have a coupon code?</label>
+                    <form method="POST" action="{% url 'coupons:apply_coupon' %}">
+                        {% csrf_token %}
+                        <div class="input-group">
+                            <input type="text" name="coupon_code" class="form-control shadow-none" placeholder="Enter code" style="border-radius: 6px 0 0 6px;">
+                            <button class="btn btn-dark fw-semibold" type="submit" style="border-radius: 0 6px 6px 0;">Apply</button>
+                        </div>
+                    </form>
+                    {% if coupon %}
+                    <div class="mt-2 text-success small fw-bold d-flex align-items-center">
+                        <i class="fas fa-check-circle me-1"></i> Coupon '{{ coupon.code }}' applied ({{ coupon.discount }}% off)
+                    </div>
+                    {% endif %}
+                </div>
 
-{% if coupon %}
-<p class="text-success">
-    Coupon {{ coupon.code }} applied ({{ coupon.discount }}% off)
-</p>
-{% endif %}
-                <div class="d-flex justify-content-between">
-    <span>Subtotal:</span>
-    <span>₹{{ total }}</span>
-</div>
+                <!-- Calculations -->
+                <ul class="list-unstyled mb-4">
+                    <li class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Subtotal ({{ items|length }} items)</span>
+                        <span class="fw-semibold">₹{{ total }}</span>
+                    </li>
+                    <li class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Shipping Estimate</span>
+                        <span class="text-success fw-bold">FREE</span>
+                    </li>
+                    <li class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Tax Estimate</span>
+                        <span class="fw-semibold">Calculated at checkout</span>
+                    </li>
+                    {% if discount_amount %}
+                    <li class="d-flex justify-content-between mb-3 pb-3 border-bottom text-success">
+                        <span><i class="fas fa-tags me-1"></i> Discount</span>
+                        <span class="fw-bold">- ₹{{ discount_amount }}</span>
+                    </li>
+                    {% else %}
+                    <li class="pb-3 border-bottom mb-3"></li>
+                    {% endif %}
+                    
+                    <li class="d-flex justify-content-between mt-2 align-items-center">
+                        <span class="fw-bold fs-5 text-dark">Order Total</span>
+                        <span class="fw-bold fs-4 text-danger">₹{{ discounted_total|default:total }}</span>
+                    </li>
+                </ul>
 
-{% if discount_amount %}
-<div class="d-flex justify-content-between text-success">
-    <span>Discount:</span>
-    <span>- ₹{{ discount_amount }}</span>
-</div>
-{% endif %}
-
-<hr>
-<div class="d-flex justify-content-between">
-    <strong>Total:</strong>
-    <strong>₹{{ discounted_total }}</strong>
-</div>
-                <hr>
-                <a href="{% url 'orders:checkout' %}"
-                   class="btn btn-warning w-100 mb-2">
-                    Proceed to Checkout
+                <a href="{% url 'orders:checkout' %}" class="btn btn-warning w-100 py-3 fw-bold fs-5 shadow-sm rounded-pill mb-3 text-dark">
+                    Proceed to Checkout <i class="fas fa-lock ms-2 small"></i>
                 </a>
-                <a href="{% url 'products:home' %}"
-                   class="btn btn-outline-secondary w-100">
-                    Continue Shopping
-                </a>
+                
+                <!-- Trust -->
+                <div class="text-center mt-4">
+                    <p class="small text-muted mb-2"><i class="fas fa-shield-alt text-success me-1"></i> Safe and Secure Payments</p>
+                    <div class="d-flex justify-content-center gap-2 text-muted">
+                        <i class="fab fa-cc-visa fs-4"></i>
+                        <i class="fab fa-cc-mastercard fs-4"></i>
+                        <i class="fab fa-cc-amex fs-4"></i>
+                        <i class="fab fa-cc-paypal fs-4"></i>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-{% else %}
-<div class="text-center mt-5">
-    <h4>Your cart is empty</h4>
-    <a href="{% url 'products:home' %}"
-       class="btn btn-primary mt-3">
-        Start Shopping
-    </a>
-</div>
-{% endif %}
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center py-5 bg-white rounded shadow-sm border mt-4">
+        <div class="d-inline-flex align-items-center justify-content-center bg-light rounded-circle mb-4" style="width: 120px; height: 120px;">
+            <i class="fas fa-shopping-cart fs-1 text-muted opacity-50"></i>
+        </div>
+        <h3 class="fw-bold mb-3">Your cart is feeling lonely</h3>
+        <p class="text-muted mb-4 mx-auto" style="max-width: 400px;">Looks like you haven't added anything to your cart yet. Explore our top products and find something you love!</p>
+        <a href="{% url 'products:home' %}" class="btn btn-primary px-5 py-3 rounded-pill fw-bold shadow-sm">
+            Start Shopping
+        </a>
+    </div>
+    {% endif %}
 
+</div>
 {% endblock %}

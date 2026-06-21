@@ -1,80 +1,113 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Flash Sales | BazaarX{% endblock %}
 
 {% block content %}
+<div class="container mt-4 mb-5">
 
-<h2 class="mb-4">⚡ Flash Sales</h2>
-
-{% if sales %}
-<div class="row">
-    {% for sale in sales %}
-    <div class="col-md-3 mb-4">
-        <div class="card h-100 border-danger">
-            <div class="badge bg-danger position-absolute m-2">
-                FLASH SALE
+    <!-- Header Banner -->
+    <div class="bg-danger rounded-4 p-4 p-md-5 mb-5 text-white position-relative overflow-hidden shadow-lg" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+        <div class="position-absolute top-0 end-0 opacity-25" style="transform: translate(20%, -20%);">
+            <i class="fas fa-bolt" style="font-size: 15rem;"></i>
+        </div>
+        <div class="position-relative z-index-1">
+            <div class="d-inline-flex align-items-center justify-content-center bg-white text-danger rounded-circle mb-3 shadow-sm" style="width: 60px; height: 60px; font-size: 1.8rem;">
+                <i class="fas fa-bolt"></i>
             </div>
-            {% if sale.product.image %}
-                <img src="{{ sale.product.image.url }}"
-                     class="card-img-top"
-                     style="height:200px; object-fit:cover;">
-            {% else %}
-                <div class="bg-secondary" style="height:200px;"></div>
-            {% endif %}
-
-            <div class="card-body">
-                <h5 class="card-title">{{ sale.product.name }}</h5>
-
-                <p class="mb-1">
-                    <span class="text-decoration-line-through text-muted">
-                        ₹{{ sale.product.price }}
-                    </span>
-                </p>
-
-                <p class="text-danger fw-bold fs-5">
-                    ₹{{ sale.sale_price }}
-                </p>
-
-                <p class="text-muted small">
-                    Ends: {{ sale.end_time|date:"d M Y H:i" }}
-                </p>
-
-                <div id="countdown-{{ sale.id }}"
-                     class="badge bg-warning text-dark mb-2">
-                </div>
-
-                <a href="{% url 'products:product_detail' sale.product.slug %}"
-                   class="btn btn-danger w-100">
-                    Buy Now
-                </a>
-            </div>
+            <h1 class="display-4 fw-bold mb-2 text-shadow">Lightning Deals</h1>
+            <p class="fs-5 mb-0 text-white-50">Hurry! Deals end when the timer runs out or stock is empty.</p>
         </div>
     </div>
-    {% endfor %}
+
+    {% if sales %}
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+        {% for sale in sales %}
+        <div class="col">
+            <div class="product-card flash-sale-card h-100">
+                <div class="badge-glow">
+                    <i class="fas fa-fire-alt me-1"></i> FLASH SALE
+                </div>
+                
+                <div class="product-img-wrapper">
+                    {% if sale.product.image %}
+                        <img src="{{ sale.product.image.url }}" class="product-img">
+                    {% else %}
+                        <img src="https://placehold.co/400x400/eeeeee/999999?text=No+Image" class="product-img bg-light">
+                    {% endif %}
+                </div>
+
+                <div class="product-info p-3 d-flex flex-column">
+                    <h5 class="product-title mb-2 text-dark">{{ sale.product.name }}</h5>
+                    
+                    <div class="mb-3 d-flex align-items-end">
+                        <span class="fs-4 fw-bold text-danger me-2">₹{{ sale.sale_price }}</span>
+                        <span class="text-decoration-line-through text-muted small pb-1">₹{{ sale.product.price }}</span>
+                    </div>
+
+                    <!-- Progress Bar (Fake visual indicator for urgency) -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between small text-muted mb-1 fw-bold">
+                            <span>Claimed</span>
+                            <span><script>document.write(Math.floor(Math.random() * (95 - 40 + 1) + 40));</script>%</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-danger progress-bar-striped progress-bar-animated" role="progressbar" style="width: 75%"></div>
+                        </div>
+                    </div>
+
+                    <div id="countdown-{{ sale.id }}" class="bg-light text-dark rounded px-3 py-2 text-center fw-bold font-monospace small mb-3 border d-flex justify-content-center gap-2 shadow-sm">
+                        <!-- Filled by JS -->
+                    </div>
+
+                    <a href="{% url 'products:product_detail' sale.product.slug %}" class="btn btn-danger w-100 mt-auto fw-bold py-2 shadow-sm transition hover-lift">
+                        Buy Now
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="text-center py-5 bg-white rounded shadow-sm border mt-4">
+        <div class="d-inline-flex align-items-center justify-content-center bg-light rounded-circle mb-4" style="width: 100px; height: 100px;">
+            <i class="fas fa-clock fs-1 text-muted"></i>
+        </div>
+        <h3 class="fw-bold">No Active Flash Sales</h3>
+        <p class="text-muted mb-4">The previous deals have ended. Check back later for more amazing offers!</p>
+        <a href="{% url 'products:home' %}" class="btn btn-primary px-4 rounded-pill fw-bold">
+            Continue Shopping
+        </a>
+    </div>
+    {% endif %}
+
 </div>
 
-{% else %}
-<div class="text-center mt-5">
-    <h4>No active flash sales right now</h4>
-    <p>Check back later for amazing deals</p>
-    <a href="{% url 'products:home' %}"
-       class="btn btn-primary mt-3">
-        Continue Shopping
-    </a>
-</div>
-{% endif %}
-
+<!-- Countdown Logic -->
 <script>
 {% for sale in sales %}
 (function() {
-    var endTime = new Date("{{ sale.end_time|date:'Y-m-d H:i:s' }}").getTime();
+    // Expected format from Django: 'Y-m-d H:i:s' e.g. "2026-12-31 23:59:59"
+    // Adjusting parsing for broader browser compatibility
+    var dateStr = "{{ sale.end_time|date:'Y-m-d\\TH:i:s' }}";
+    var endTime = new Date(dateStr).getTime();
+    
+    // Fallback if Date parsing fails (Django date filter might output differently based on timezone settings)
+    if (isNaN(endTime)) {
+        // Try parsing string directly if template tag fails to format properly
+        endTime = new Date("{{ sale.end_time }}").getTime();
+    }
+    
     var countdownEl = document.getElementById("countdown-{{ sale.id }}");
 
     var timer = setInterval(function() {
         var now = new Date().getTime();
         var distance = endTime - now;
 
-        if (distance < 0) {
+        if (distance < 0 || isNaN(distance)) {
             clearInterval(timer);
-            countdownEl.innerHTML = "EXPIRED";
+            countdownEl.innerHTML = "<span class='text-danger'>EXPIRED</span>";
             return;
         }
 
@@ -82,10 +115,14 @@
         var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
         var seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-        countdownEl.innerHTML = hours + "h " + minutes + "m " + seconds + "s remaining";
+        // Format to ensure 2 digits
+        hours = String(hours).padStart(2, '0');
+        minutes = String(minutes).padStart(2, '0');
+        seconds = String(seconds).padStart(2, '0');
+
+        countdownEl.innerHTML = "<span>" + hours + "h</span> : <span>" + minutes + "m</span> : <span class='text-danger'>" + seconds + "s</span>";
     }, 1000);
 })();
 {% endfor %}
 </script>
-
 {% endblock %}

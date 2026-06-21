@@ -1,41 +1,98 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Search Results for "{{ query }}" | BazaarX{% endblock %}
 
 {% block content %}
+<div class="container mt-4 mb-5">
+    
+    <div class="bg-white p-3 rounded shadow-sm border mb-4 d-flex justify-content-between align-items-center">
+        <h4 class="mb-0 fw-normal">
+            <span class="text-muted">Search results for</span> 
+            <span class="fw-bold text-primary-custom">"{{ query }}"</span>
+        </h4>
+        <span class="badge bg-secondary rounded-pill px-3 py-2">
+            <!-- We don't have a direct count variable, but the layout implies we are showing results -->
+            Showing Results
+        </span>
+    </div>
 
-
-<h4>Search results for "{{ query }}"</h4>
-<div class="row">
-    {% for product in products %}
-    <div class="col-md-3 mb-4">
-        <div class="card h-100">
-            {% if product.image %}
-                <img src="{{ product.image.url }}" 
-                     class="card-img-top" 
-                     style="height:200px; object-fit:cover;">
-            {% else %}
-                <div class="bg-secondary" style="height:200px;"></div>
-            {% endif %}
-
-            <div class="card-body">
-                <h5 class="card-title">{{ product.name }}</h5>
-                <p class="card-text">
-                    Price: ₹{{ product.price }}
-                </p>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+        {% for product in products %}
+        <div class="col">
+            <div class="product-card">
+                <!-- Badges -->
                 {% if product.discount > 0 %}
-                    <p class="text-success">
-                        {{ product.discount }}% off
-                    </p>
+                <div class="discount-badge">
+                    {{ product.discount }}% OFF
+                </div>
                 {% endif %}
-                <a href="{% url 'products:product_detail' product.slug %}" 
-                   class="btn btn-primary btn-sm">
-                    View Details
+                
+                <!-- Image -->
+                <div class="product-img-wrapper">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-img">
+                    {% else %}
+                        <img src="https://placehold.co/400x400/eeeeee/999999?text=No+Image" alt="{{ product.name }}" class="product-img bg-light">
+                    {% endif %}
+                    
+                    <!-- Hover Actions -->
+                    <div class="product-actions">
+                        <a href="{% url 'extras:add_to_wishlist' product.id %}" class="btn-action text-decoration-none" title="Add to Wishlist">
+                            <i class="far fa-heart"></i>
+                        </a>
+                        <a href="{% url 'products:add_to_compare' product.id %}" class="btn-action text-decoration-none" title="Compare">
+                            <i class="fas fa-code-compare"></i>
+                        </a>
+                        <a href="{% url 'products:product_detail' product.slug %}" class="btn-action text-decoration-none" title="Quick View">
+                            <i class="far fa-eye"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Info -->
+                <div class="product-info">
+                    <div class="product-category">{{ product.category.name }}</div>
+                    <a href="{% url 'products:product_detail' product.slug %}" class="text-decoration-none">
+                        <h3 class="product-title hover-primary" title="{{ product.name }}">{{ product.name }}</h3>
+                    </a>
+                    
+                    <!-- Rating Placeholder -->
+                    <div class="d-flex text-warning mb-2" style="font-size: 0.8rem;">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+                    </div>
+                    
+                    <!-- Price & Add to Cart -->
+                    <div class="product-price-container mt-auto">
+                        <div>
+                            <span class="product-price text-danger">₹{{ product.price }}</span>
+                            {% if product.discount > 0 %}
+                                <span class="product-original-price ms-2 d-none d-sm-inline">₹<script>document.write(Math.round({{ product.price }} / (1 - {{ product.discount }}/100)))</script></span>
+                            {% endif %}
+                        </div>
+                        
+                        <form method="POST" action="{% url 'cart:add_to_cart' product.id %}" class="ms-auto">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary rounded-circle" style="width: 40px; height: 40px; padding: 0;" title="Add to Cart">
+                                <i class="fas fa-cart-plus"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5 bg-white rounded shadow-sm border mt-4">
+                <img src="https://cdni.iconscout.com/illustration/premium/thumb/empty-cart-2130356-1800917.png" alt="No Results" style="width: 250px; opacity: 0.7;" class="mb-3">
+                <h4 class="fw-bold text-dark">No matching products found</h4>
+                <p class="text-muted mb-4">Try checking your spelling or use more general terms.</p>
+                <a href="{% url 'products:home' %}" class="btn btn-primary px-4 rounded-pill">
+                    <i class="fas fa-arrow-left me-2"></i> Back to Home
                 </a>
             </div>
         </div>
+        {% endfor %}
     </div>
-    {% empty %}
-        <p>No products found.</p>
-    {% endfor %}
 </div>
-
 {% endblock %}

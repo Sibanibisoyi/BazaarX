@@ -1,189 +1,288 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard | BazaarX{% endblock %}
 
 {% block content %}
+<div class="container mt-4 mb-5">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <h2 class="mb-0 fw-bold"><i class="fas fa-shield-alt text-primary-custom me-2"></i>Admin Dashboard</h2>
+        <span class="badge bg-dark rounded-pill px-3 py-2 fw-medium">Welcome, {{ user.username }}</span>
+    </div>
 
-<h2 class="mb-4">Admin Dashboard</h2>
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3 col-sm-6">
+            <div class="card bg-primary text-white border-0 shadow-sm rounded-4 h-100" style="background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);">
+                <div class="card-body p-4 position-relative overflow-hidden">
+                    <i class="fas fa-shopping-bag position-absolute end-0 top-50 translate-middle-y opacity-25 me-n3" style="font-size: 5rem;"></i>
+                    <h6 class="fw-semibold mb-2 opacity-75 text-uppercase tracking-wide" style="font-size: 0.85rem;">Total Orders</h6>
+                    <h2 class="display-6 fw-bold mb-0">{{ total_orders }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card bg-success text-white border-0 shadow-sm rounded-4 h-100" style="background: linear-gradient(135deg, #198754 0%, #157347 100%);">
+                <div class="card-body p-4 position-relative overflow-hidden">
+                    <i class="fas fa-users position-absolute end-0 top-50 translate-middle-y opacity-25 me-n3" style="font-size: 5rem;"></i>
+                    <h6 class="fw-semibold mb-2 opacity-75 text-uppercase tracking-wide" style="font-size: 0.85rem;">Total Users</h6>
+                    <h2 class="display-6 fw-bold mb-0">{{ total_users }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card bg-warning text-dark border-0 shadow-sm rounded-4 h-100" style="background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);">
+                <div class="card-body p-4 position-relative overflow-hidden">
+                    <i class="fas fa-box position-absolute end-0 top-50 translate-middle-y opacity-25 me-n3" style="font-size: 5rem;"></i>
+                    <h6 class="fw-semibold mb-2 opacity-75 text-uppercase tracking-wide" style="font-size: 0.85rem;">Total Products</h6>
+                    <h2 class="display-6 fw-bold mb-0">{{ total_products }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card bg-danger text-white border-0 shadow-sm rounded-4 h-100" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
+                <div class="card-body p-4 position-relative overflow-hidden">
+                    <i class="fas fa-rupee-sign position-absolute end-0 top-50 translate-middle-y opacity-25 me-n3" style="font-size: 5rem;"></i>
+                    <h6 class="fw-semibold mb-2 opacity-75 text-uppercase tracking-wide" style="font-size: 0.85rem;">Total Revenue</h6>
+                    <h2 class="display-6 fw-bold mb-0">₹{{ total_revenue }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<!-- Stats Cards -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card bg-primary text-white">
-            <div class="card-body">
-                <h5>Total Orders</h5>
-                <h2>{{ total_orders }}</h2>
+    <!-- Pending Approvals & Returns Row -->
+    <div class="row g-4 mb-5">
+        <!-- Pending Sellers -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white p-4 border-bottom-0 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-user-clock text-warning me-2"></i>Pending Sellers</h5>
+                    {% if pending_sellers %}
+                        <span class="badge bg-warning text-dark rounded-pill">{{ pending_sellers|length }} New</span>
+                    {% endif %}
+                </div>
+                <div class="card-body p-0">
+                    {% if pending_sellers %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Shop Name</th>
+                                    <th>User</th>
+                                    <th class="text-end pe-4">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for seller in pending_sellers %}
+                                <tr>
+                                    <td class="ps-4 fw-medium">{{ seller.shop_name }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px; font-size: 0.8rem;">
+                                                {{ seller.user.username|first|upper }}
+                                            </div>
+                                            {{ seller.user.username }}
+                                        </div>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <a href="{% url 'dashboard:approve_seller' seller.id %}" class="btn btn-sm btn-success rounded-pill px-3 fw-medium">
+                                            Approve
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="p-5 text-center text-muted">
+                        <i class="fas fa-check-circle fs-1 text-success opacity-50 mb-3"></i>
+                        <p class="mb-0">All caught up! No pending seller approvals.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Returns -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white p-4 border-bottom-0 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-undo text-danger me-2"></i>Return Requests</h5>
+                    {% if pending_returns %}
+                        <span class="badge bg-danger rounded-pill">{{ pending_returns|length }} Pending</span>
+                    {% endif %}
+                </div>
+                <div class="card-body p-0">
+                    {% if pending_returns %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Order #</th>
+                                    <th>User</th>
+                                    <th class="text-end pe-4">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for return in pending_returns %}
+                                <tr>
+                                    <td class="ps-4 fw-medium text-primary-custom">#{{ return.order.id }}</td>
+                                    <td>{{ return.user.username }}</td>
+                                    <td class="text-end pe-4">
+                                        <a href="{% url 'returns:approve_return' return.id %}" class="btn btn-sm btn-success rounded-circle me-1" title="Approve" style="width: 32px; height: 32px; padding: 0; line-height: 32px;">
+                                            <i class="fas fa-check"></i>
+                                        </a>
+                                        <a href="{% url 'dashboard:reject_return' return.id %}" class="btn btn-sm btn-outline-danger rounded-circle" title="Reject" style="width: 32px; height: 32px; padding: 0; line-height: 32px;">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="p-5 text-center text-muted">
+                        <i class="fas fa-box fs-1 text-success opacity-50 mb-3"></i>
+                        <p class="mb-0">No active return requests to process.</p>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card bg-success text-white">
-            <div class="card-body">
-                <h5>Total Users</h5>
-                <h2>{{ total_users }}</h2>
+
+    <!-- Chart & Recent Orders -->
+    <div class="row g-4">
+        <!-- Sales Chart -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white p-4 border-bottom-0">
+                    <h5 class="fw-bold mb-0">Revenue Overview</h5>
+                </div>
+                <div class="card-body px-4 pb-4 pt-0">
+                    <canvas id="revenueChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white p-4 border-bottom-0">
+                    <h5 class="fw-bold mb-0">Recent Orders</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                        <table class="table table-hover align-middle mb-0 text-nowrap">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th class="ps-4">Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th class="pe-4">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in recent_orders %}
+                                <tr>
+                                    <td class="ps-4 fw-medium text-dark">#{{ order.id }}</td>
+                                    <td>{{ order.user.username }}</td>
+                                    <td class="fw-semibold">₹{{ order.total_price }}</td>
+                                    <td>
+                                        {% if order.status == 'delivered' %}
+                                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill">Delivered</span>
+                                        {% elif order.status == 'cancelled' %}
+                                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1 rounded-pill">Cancelled</span>
+                                        {% else %}
+                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1 rounded-pill">{{ order.status|title }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="pe-4 text-muted small">{{ order.created_at|date:"d M Y" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">No recent orders.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card bg-warning text-white">
-            <div class="card-body">
-                <h5>Total Products</h5>
-                <h2>{{ total_products }}</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-danger text-white">
-            <div class="card-body">
-                <h5>Total Revenue</h5>
-                <h2>₹{{ total_revenue }}</h2>
-            </div>
-        </div>
-    </div>
+
 </div>
 
-<!-- Pending Sellers -->
-<div class="row mb-4">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5>Pending Seller Approvals</h5>
-            </div>
-            <div class="card-body">
-                {% if pending_sellers %}
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Shop Name</th>
-                            <th>User</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for seller in pending_sellers %}
-                        <tr>
-                            <td>{{ seller.shop_name }}</td>
-                            <td>{{ seller.user.username }}</td>
-                            <td>
-                                <a href="{% url 'dashboard:approve_seller' seller.id %}"
-                                   class="btn btn-sm btn-success">
-                                    Approve
-                                </a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <p>No pending sellers</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-
-    <!-- Pending Returns -->
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5>Pending Return Requests</h5>
-            </div>
-            <div class="card-body">
-                {% if pending_returns %}
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Order</th>
-                            <th>User</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for return in pending_returns %}
-                        <tr>
-                            <td>#{{ return.order.id }}</td>
-                            <td>{{ return.user.username }}</td>
-                            <td>
-                                <a href="{% url 'returns:approve_return' return.id %}"
-                                   class="btn btn-sm btn-success me-1">
-                                    Approve
-                                </a>
-                                <a href="{% url 'dashboard:reject_return' return.id %}"
-                                   class="btn btn-sm btn-danger">
-                                    Reject
-                                </a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <p>No pending returns</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Recent Orders -->
-<div class="card mb-4">
-    <div class="card-header">
-        <h5>Recent Orders</h5>
-    </div>
-    <div class="card-body">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Order ID</th>
-                    <th>User</th>
-                    <th>Total</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for order in recent_orders %}
-                <tr>
-                    <td>#{{ order.id }}</td>
-                    <td>{{ order.user.username }}</td>
-                    <td>₹{{ order.total_price }}</td>
-                    <td>
-                        <span class="badge bg-warning">
-                            {{ order.status }}
-                        </span>
-                    </td>
-                    <td>{{ order.created_at|date:"d M Y" }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- Sales Chart -->
-<div class="card mb-4">
-    <div class="card-header">
-        <h5>Revenue Overview</h5>
-    </div>
-    <div class="card-body">
-        <canvas id="revenueChart" height="100"></canvas>
-    </div>
-</div>
-
+<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const ctx = document.getElementById('revenueChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Total Orders', 'Total Users', 'Total Products'],
-            datasets: [{
-                label: 'BazaarX Stats',
-                data: [{{ total_orders }}, {{ total_users }}, {{ total_products }}],
-                backgroundColor: ['#0d6efd', '#198754', '#ffc107'],
-            }]
-        },
-        options: {
-            responsive: true,
-        }
+    document.addEventListener("DOMContentLoaded", function() {
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        
+        // Custom styling for Chart.js
+        Chart.defaults.font.family = "'Poppins', sans-serif";
+        Chart.defaults.color = '#6c757d';
+        
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Orders', 'Users', 'Products'],
+                datasets: [{
+                    label: 'BazaarX Metrics',
+                    data: [{{ total_orders }}, {{ total_users }}, {{ total_products }}],
+                    backgroundColor: [
+                        'rgba(13, 110, 253, 0.8)',   // Primary
+                        'rgba(25, 135, 84, 0.8)',    // Success
+                        'rgba(255, 193, 7, 0.8)'     // Warning
+                    ],
+                    borderColor: [
+                        'rgb(13, 110, 253)',
+                        'rgb(25, 135, 84)',
+                        'rgb(255, 193, 7)'
+                    ],
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    barPercentage: 0.6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(26, 26, 46, 0.9)',
+                        titleFont: { size: 13, weight: 'bold' },
+                        bodyFont: { size: 14 },
+                        padding: 10,
+                        cornerRadius: 8,
+                        displayColors: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        }
+                    }
+                }
+            }
+        });
     });
 </script>
-
 {% endblock %}

@@ -1,33 +1,104 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg sticky-top transition" style="background-color: var(--secondary); padding: 1rem 0; z-index: 1020;">
     <div class="container">
+        <!-- Logo -->
+        <a class="navbar-brand text-primary-custom" href="{% url 'products:home' %}">
+            <i class="fas fa-shopping-bag me-2"></i>BazaarX
+        </a>
 
-        <a class="navbar-brand" href="/">BazaarX</a>
-        <form class="d-flex me-3" method="GET" action="{% url 'products:search' %}">
-    <input class="form-control me-2" 
-           type="search" 
-           name="q" 
-           placeholder="Search products...">
-    <button class="btn btn-outline-light" type="submit">Search</button>
-</form>
-        <div class="navbar-nav ms-auto">
-            {% if user.is_authenticated %}
-            {% if user.is_staff %}
-<a class="nav-link" href="{% url 'dashboard:admin_dashboard' %}">
-    Admin Dashboard
-</a>
-<a class="nav-link" href="{% url 'extras:flash_sale' %}">Flash Sales</a>
-<a class="nav-link" href="{% url 'products:compare_products' %}">Compare</a>
-{% endif %}
-                <a class="nav-link" href="{% url 'orders:my_orders' %}">My Orders</a>
-                <a class="nav-link" href="{% url 'extras:wishlist_detail' %}">Wishlist</a>
-                <a class="nav-link" href="{% url 'cart:cart_detail' %}">
-    Cart ({{ cart_count }})</a>
-                <a class="nav-link" href="/users/logout">Logout</a>
-            {% else %}
-                <a class="nav-link" href="/users/login">Login</a>
-                <a class="nav-link" href="/users/register">Register</a>
-            {% endif %}
+        <!-- Mobile Toggle -->
+        <button class="navbar-toggler border-0 shadow-none text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+            <i class="fas fa-bars fs-4"></i>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarMain">
+            <!-- Search Bar -->
+            <form class="search-form d-flex mx-auto w-100 my-3 my-lg-0" method="GET" action="{% url 'products:search' %}" style="max-width: 600px;">
+                <div class="input-group">
+                    <input class="form-control border-0 shadow-none px-4 py-2" 
+                           type="search" 
+                           name="q" 
+                           placeholder="Search for products, brands and more..." 
+                           style="border-radius: 20px 0 0 20px;">
+                    <button class="btn btn-primary px-4" type="submit" style="border-radius: 0 20px 20px 0;">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Navigation Links -->
+            <ul class="navbar-nav ms-auto align-items-center gap-2">
+                <li class="nav-item d-none d-lg-block">
+                    <a class="nav-link text-white hover-primary transition" href="{% url 'extras:flash_sale' %}">
+                        <i class="fas fa-bolt text-warning"></i> Flash Sales
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link text-white hover-primary transition position-relative" href="{% url 'products:compare_products' %}" title="Compare">
+                        <i class="fas fa-code-compare fs-5"></i>
+                        <span class="d-lg-none ms-2">Compare</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link text-white hover-primary transition position-relative" href="{% url 'extras:wishlist_detail' %}" title="Wishlist">
+                        <i class="far fa-heart fs-5"></i>
+                        <span class="d-lg-none ms-2">Wishlist</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link text-white hover-primary transition position-relative" href="{% url 'cart:cart_detail' %}" title="Cart">
+                        <i class="fas fa-shopping-cart fs-5"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
+                            {{ cart_count }}
+                        </span>
+                        <span class="d-lg-none ms-2">Cart</span>
+                    </a>
+                </li>
+
+                <!-- User Dropdown -->
+                <li class="nav-item dropdown ms-lg-2 mt-2 mt-lg-0">
+                    <a class="nav-link text-white dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown">
+                        <div class="rounded-circle bg-primary-custom d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                            <i class="fas fa-user text-white"></i>
+                        </div>
+                        <div class="d-flex flex-column lh-1 d-lg-none d-xl-block">
+                            <small class="text-muted" style="font-size: 0.75rem;">Hello,</small>
+                            <span class="fw-semibold">{% if user.is_authenticated %}{{ user.username }}{% else %}Sign In{% endif %}</span>
+                        </div>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" style="border-radius: 8px;">
+                        {% if user.is_authenticated %}
+                            <li>
+                                <a class="dropdown-item py-2" href="{% url 'orders:my_orders' %}">
+                                    <i class="fas fa-box me-2 text-primary-custom"></i> My Orders
+                                </a>
+                            </li>
+                            {% if user.is_staff %}
+                            <li>
+                                <a class="dropdown-item py-2" href="{% url 'dashboard:admin_dashboard' %}">
+                                    <i class="fas fa-chart-line me-2 text-primary-custom"></i> Admin Dashboard
+                                </a>
+                            </li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item py-2 text-danger" href="/users/logout/">
+                                    <i class="fas fa-sign-out-alt me-2"></i> Logout
+                                </a>
+                            </li>
+                        {% else %}
+                            <li>
+                                <div class="px-3 py-2 text-center">
+                                    <a href="{% url 'users:login' %}" class="btn btn-primary w-100 mb-2">Login</a>
+                                    <small class="text-muted">New customer? <a href="{% url 'users:register' %}" class="text-primary-custom text-decoration-none fw-medium">Register</a></small>
+                                </div>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </li>
+            </ul>
         </div>
-
     </div>
 </nav>

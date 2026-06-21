@@ -1,60 +1,154 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Checkout | BazaarX{% endblock %}
 
 {% block content %}
+<div class="container mt-4 mb-5">
 
-<h2 class="mb-4">Checkout</h2>
-
-<div class="row">
-    <div class="col-md-7">
-        <h5>Select Delivery Address</h5>
-
-        <form method="POST" action="{% url 'orders:place_order' %}">
-            {% csrf_token %}
-
-            {% if addresses %}
-                {% for addr in addresses %}
-                <div class="form-check mb-3">
-                    <input class="form-check-input"
-                           type="radio"
-                           name="address"
-                           value="{{ addr.id }}"
-                           {% if forloop.first %}checked{% endif %}>
-                    <label class="form-check-label">
-                        {{ addr.full_name }} —
-                        {{ addr.address_line }},
-                        {{ addr.city }},
-                        {{ addr.state }} -
-                        {{ addr.pincode }}
-                    </label>
-                </div>
-                {% endfor %}
-            {% else %}
-                <p class="text-danger">
-                    No address found.
-                    <a href="#">Add address</a>
-                </p>
-            {% endif %}
-
-            <h5 class="mt-4">Order Summary</h5>
-            <table class="table">
-                {% for item in items %}
-                <tr>
-                    <td>{{ item.product.name }}</td>
-                    <td>x{{ item.quantity }}</td>
-                    <td>₹{{ item.product.price }}</td>
-                </tr>
-                {% endfor %}
-                <tr>
-                    <td colspan="2"><strong>Total</strong></td>
-                    <td><strong>₹{{ total }}</strong></td>
-                </tr>
-            </table>
-
-            <button type="submit" class="btn btn-warning btn-lg w-100">
-                Place Order
-            </button>
-        </form>
+    <div class="text-center mb-5">
+        <h2 class="fw-bold"><i class="fas fa-lock text-success me-2"></i>Secure Checkout</h2>
+        <p class="text-muted">Complete your order in just one step</p>
     </div>
+
+    <form method="POST" action="{% url 'orders:place_order' %}">
+        {% csrf_token %}
+        <div class="row g-4">
+            
+            <!-- Left Side: Address Selection -->
+            <div class="col-lg-8">
+                <div class="bg-white rounded shadow-sm border p-4 mb-4">
+                    <h4 class="fw-bold mb-4 border-bottom pb-2">
+                        <span class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px; font-size: 1rem;">1</span> 
+                        Delivery Address
+                    </h4>
+
+                    {% if addresses %}
+                        <div class="row g-3">
+                            {% for addr in addresses %}
+                            <div class="col-md-6">
+                                <label class="w-100 cursor-pointer">
+                                    <input class="form-check-input d-none" type="radio" name="address" value="{{ addr.id }}" {% if forloop.first %}checked{% endif %} id="addr-{{ addr.id }}" onchange="updateSelectedAddress(this)">
+                                    <div class="card h-100 address-card transition border-2" id="card-addr-{{ addr.id }}" style="border-color: {% if forloop.first %}var(--primary){% else %}var(--border){% endif %} !important; background-color: {% if forloop.first %}#fff8f5{% else %}#fff{% endif %};">
+                                        <div class="card-body position-relative">
+                                            <!-- Custom Radio indicator -->
+                                            <div class="position-absolute top-0 end-0 mt-3 me-3">
+                                                <i class="fas fa-check-circle text-primary-custom fs-4 {% if not forloop.first %}opacity-0{% endif %}" id="icon-addr-{{ addr.id }}"></i>
+                                            </div>
+                                            
+                                            <h6 class="fw-bold mb-2">{{ addr.full_name }}</h6>
+                                            <p class="text-muted small mb-1"><i class="fas fa-map-marker-alt me-1 w-15px"></i> {{ addr.address_line }}</p>
+                                            <p class="text-muted small mb-0 ms-4">{{ addr.city }}, {{ addr.state }} - <span class="fw-bold">{{ addr.pincode }}</span></p>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning d-flex align-items-center shadow-sm">
+                            <i class="fas fa-exclamation-triangle fs-4 me-3"></i>
+                            <div>
+                                <h6 class="fw-bold mb-1">No Delivery Address Found</h6>
+                                <p class="mb-0 small">Please add an address in your profile before proceeding.</p>
+                            </div>
+                            <!-- In a real app this would link to add address, keeping placeholder for UI completeness -->
+                            <a href="#" class="btn btn-outline-dark btn-sm ms-auto fw-bold">Add Address</a>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Payment Method Mockup -->
+                <div class="bg-white rounded shadow-sm border p-4">
+                    <h4 class="fw-bold mb-4 border-bottom pb-2">
+                        <span class="bg-secondary text-white rounded-circle d-inline-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px; font-size: 1rem;">2</span> 
+                        Payment Method
+                    </h4>
+                    
+                    <div class="alert alert-info border-0 bg-light d-flex align-items-center">
+                        <i class="fas fa-info-circle fs-4 text-primary-custom me-3"></i>
+                        <div>
+                            <strong>Cash on Delivery (COD)</strong> is selected as the default payment method for this demo. You will pay when your order arrives.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Order Summary -->
+            <div class="col-lg-4">
+                <div class="bg-white rounded shadow-sm border p-4 sticky-top" style="top: 100px;">
+                    <h4 class="fw-bold mb-4 border-bottom pb-2">Order Summary</h4>
+                    
+                    <div class="order-items-list mb-4 overflow-auto" style="max-height: 300px; scrollbar-width: thin;">
+                        {% for item in items %}
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="position-relative">
+                                {% if item.product.image %}
+                                    <img src="{{ item.product.image.url }}" class="border rounded" style="width: 60px; height: 60px; object-fit: contain; background: #fff; padding: 2px;">
+                                {% else %}
+                                    <img src="https://placehold.co/60x60/eeeeee/999999?text=Img" class="border rounded">
+                                {% endif %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-secondary border border-white">
+                                    {{ item.quantity }}
+                                </span>
+                            </div>
+                            <div class="ms-3 flex-grow-1">
+                                <h6 class="mb-0 text-dark fw-semibold small line-clamp-2" title="{{ item.product.name }}">{{ item.product.name }}</h6>
+                                <span class="text-muted small">₹{{ item.product.price }} each</span>
+                            </div>
+                            <div class="ms-2 fw-bold text-dark">
+                                ₹<script>document.write({{ item.product.price }} * {{ item.quantity }})</script>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <ul class="list-unstyled mb-4 border-top pt-3">
+                        <li class="d-flex justify-content-between mb-2 small text-muted">
+                            <span>Subtotal</span>
+                            <span>₹{{ total }}</span>
+                        </li>
+                        <li class="d-flex justify-content-between mb-2 small text-muted">
+                            <span>Shipping</span>
+                            <span class="text-success fw-bold">FREE</span>
+                        </li>
+                        <li class="d-flex justify-content-between mt-3 pt-3 border-top align-items-center">
+                            <span class="fw-bold fs-5 text-dark">Total</span>
+                            <span class="fw-bold fs-3 text-danger">₹{{ total }}</span>
+                        </li>
+                    </ul>
+
+                    <button type="submit" class="btn btn-warning w-100 py-3 fw-bold fs-5 shadow-sm rounded-pill text-dark position-relative overflow-hidden group">
+                        Place Order <i class="fas fa-check-circle ms-2 small"></i>
+                    </button>
+                    
+                    <p class="text-center text-muted small mt-3 mb-0">
+                        By placing your order, you agree to BazaarX's <a href="#" class="text-decoration-none">privacy notice</a> and <a href="#" class="text-decoration-none">conditions of use</a>.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </form>
 </div>
 
+<script>
+    function updateSelectedAddress(radioInput) {
+        // Reset all cards
+        document.querySelectorAll('.address-card').forEach(card => {
+            card.style.borderColor = 'var(--border)';
+            card.style.backgroundColor = '#fff';
+        });
+        document.querySelectorAll('.address-card i').forEach(icon => {
+            icon.classList.add('opacity-0');
+        });
+        
+        // Highlight selected
+        const cardId = 'card-' + radioInput.id;
+        const iconId = 'icon-' + radioInput.id;
+        document.getElementById(cardId).style.borderColor = 'var(--primary)';
+        document.getElementById(cardId).style.backgroundColor = '#fff8f5';
+        document.getElementById(iconId).classList.remove('opacity-0');
+    }
+</script>
 {% endblock %}

@@ -1,63 +1,195 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}BazaarX — Shop Smart, Shop Everything{% endblock %}
 
 {% block content %}
-<div class="mb-4">
-    <h4>⚡ Flash Sales 
-        <a href="{% url 'extras:flash_sale' %}" 
-           class="btn btn-sm btn-danger ms-2">
-            View All
-        </a>
-    </h4>
-</div>
-
-<div class="mb-4">
-    <h4>Shop by Category</h4>
-    <div class="d-flex flex-wrap gap-2">
-        {% for category in categories %}
-            <a href="#" class="btn btn-outline-secondary">
-                {{ category.name }}
-            </a>
-        {% endfor %}
-    </div>
-</div>
-
-<h4>Products</h4>
-<div class="row">
-    {% for product in products %}
-    <div class="col-md-3 mb-4">
-        <div class="card h-100">
-            {% if product.image %}
-                <img src="{{ product.image.url }}" 
-                     class="card-img-top" 
-                     style="height:200px; object-fit:cover;">
-            {% else %}
-                <div class="bg-secondary" style="height:200px;"></div>
-            {% endif %}
-
-            <div class="card-body">
-                <h5 class="card-title">{{ product.name }}</h5>
-                <p class="card-text">
-                    Price: ₹{{ product.price }}
-                </p>
-                {% if product.discount > 0 %}
-                    <p class="text-success">
-                        {{ product.discount }}% off
-                    </p>
-                {% endif %}
-                <a href="{% url 'products:product_detail' product.slug %}" 
-                   class="btn btn-primary btn-sm">
-                    View Details
-                </a>
-                <a href="{% url 'products:add_to_compare' product.id %}"
-   class="btn btn-outline-secondary btn-sm mt-1">
-    Add to Compare
-</a>
+<div class="container-fluid p-0">
+    <!-- SECTION 1 — Hero Banner -->
+    <div class="container mt-4">
+        <div class="hero-banner p-5">
+            <div class="row align-items-center">
+                <div class="col-md-7 hero-content">
+                    <span class="badge bg-warning text-dark mb-3 px-3 py-2 rounded-pill fw-bold">New Season Arrival</span>
+                    <h1 class="hero-title">Upgrade Your Lifestyle With Premium Tech</h1>
+                    <p class="hero-subtitle">Discover the latest electronics, fashion, and home essentials at unbeatable prices. Fast delivery guaranteed.</p>
+                    <a href="#products-section" class="btn btn-hero">
+                        <i class="fas fa-shopping-cart me-2"></i> Shop Now
+                    </a>
+                </div>
             </div>
         </div>
     </div>
-    {% empty %}
-        <p>No products found.</p>
-    {% endfor %}
-</div>
 
+    <!-- SECTION 2 — Flash Sales Strip -->
+    <div class="container mb-5">
+        <div class="flash-sale-strip">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-white text-danger rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-size: 1.2rem;">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <div>
+                    <h4 class="mb-0 fw-bold">Flash Sales</h4>
+                    <span class="small opacity-75">Hurry up! Offers end soon.</span>
+                </div>
+            </div>
+            <a href="{% url 'extras:flash_sale' %}" class="btn btn-light text-danger fw-bold rounded-pill px-4 shadow-sm hover-lift">
+                View All Deals <i class="fas fa-arrow-right ms-2"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- SECTION 3 — Categories -->
+    <div class="container mb-5">
+        <div class="d-flex justify-content-between align-items-end mb-4">
+            <h3 class="fw-bold mb-0">Shop by Category</h3>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary rounded-circle" style="width: 35px; height: 35px; padding: 0;" onclick="document.getElementById('cat-scroll').scrollBy({left: -200, behavior: 'smooth'})">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="btn btn-outline-secondary rounded-circle" style="width: 35px; height: 35px; padding: 0;" onclick="document.getElementById('cat-scroll').scrollBy({left: 200, behavior: 'smooth'})">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+        <div class="category-container" id="cat-scroll">
+            <a href="#" class="category-pill">
+                <i class="fas fa-th-large text-primary-custom"></i> All Categories
+            </a>
+            {% for category in categories %}
+            <a href="#" class="category-pill">
+                <i class="fas fa-tag text-muted"></i> {{ category.name }}
+            </a>
+            {% endfor %}
+            <!-- Fallbacks if no categories from DB -->
+            {% if not categories %}
+            <a href="#" class="category-pill"><i class="fas fa-mobile-alt text-primary-custom"></i> Electronics</a>
+            <a href="#" class="category-pill"><i class="fas fa-tshirt text-primary-custom"></i> Fashion</a>
+            <a href="#" class="category-pill"><i class="fas fa-couch text-primary-custom"></i> Home & Furniture</a>
+            <a href="#" class="category-pill"><i class="fas fa-dumbbell text-primary-custom"></i> Sports</a>
+            <a href="#" class="category-pill"><i class="fas fa-book text-primary-custom"></i> Books</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- SECTION 4 — Products Grid -->
+    <div class="container mb-5" id="products-section">
+        <h3 class="fw-bold mb-4">Trending Products</h3>
+        
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+            {% for product in products %}
+            <div class="col">
+                <div class="product-card">
+                    <!-- Badges -->
+                    {% if product.discount > 0 %}
+                    <div class="discount-badge">
+                        {{ product.discount }}% OFF
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Image -->
+                    <div class="product-img-wrapper">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-img">
+                        {% else %}
+                            <img src="{% static 'images/placeholder.jpg' %}" alt="{{ product.name }}" class="product-img bg-light" onerror="this.src='https://placehold.co/400x400/eeeeee/999999?text=No+Image'">
+                        {% endif %}
+                        
+                        <!-- Hover Actions -->
+                        <div class="product-actions">
+                            <a href="{% url 'extras:add_to_wishlist' product.id %}" class="btn-action text-decoration-none" title="Add to Wishlist">
+                                <i class="far fa-heart"></i>
+                            </a>
+                            <a href="{% url 'products:add_to_compare' product.id %}" class="btn-action text-decoration-none" title="Compare">
+                                <i class="fas fa-code-compare"></i>
+                            </a>
+                            <a href="{% url 'products:product_detail' product.slug %}" class="btn-action text-decoration-none" title="Quick View">
+                                <i class="far fa-eye"></i>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Info -->
+                    <div class="product-info">
+                        <div class="product-category">{{ product.category.name }}</div>
+                        <a href="{% url 'products:product_detail' product.slug %}" class="text-decoration-none">
+                            <h3 class="product-title hover-primary" title="{{ product.name }}">{{ product.name }}</h3>
+                        </a>
+                        
+                        <!-- Rating Placeholder -->
+                        <div class="d-flex text-warning mb-2" style="font-size: 0.8rem;">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                            <span class="text-muted ms-1">(4.5)</span>
+                        </div>
+                        
+                        <!-- Price & Add to Cart -->
+                        <div class="product-price-container mt-auto">
+                            <div>
+                                <span class="product-price">₹{{ product.price }}</span>
+                                {% if product.discount > 0 %}
+                                    <!-- Calculate original price roughly for display purposes -->
+                                    <span class="product-original-price ms-2 d-none d-sm-inline">₹<script>document.write(Math.round({{ product.price }} / (1 - {{ product.discount }}/100)))</script></span>
+                                {% endif %}
+                            </div>
+                            
+                            <form method="POST" action="{% url 'cart:add_to_cart' product.id %}" class="ms-auto">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary rounded-circle" style="width: 40px; height: 40px; padding: 0;" title="Add to Cart">
+                                    <i class="fas fa-cart-plus"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="text-center py-5 bg-white rounded shadow-sm border">
+                    <i class="fas fa-box-open fs-1 text-muted mb-3"></i>
+                    <h4>No products found</h4>
+                    <p class="text-muted">Check back later for new arrivals.</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- SECTION 5 — Trust Badges -->
+    <div class="container mb-5 border-top pt-5">
+        <div class="row g-4 text-center">
+            <div class="col-md-3 col-6">
+                <div class="p-3 bg-white rounded shadow-sm border h-100 transition hover-lift">
+                    <i class="fas fa-truck fs-2 text-primary-custom mb-3"></i>
+                    <h6 class="fw-bold mb-1">Free Delivery</h6>
+                    <p class="small text-muted mb-0">On orders over ₹500</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="p-3 bg-white rounded shadow-sm border h-100 transition hover-lift">
+                    <i class="fas fa-undo fs-2 text-primary-custom mb-3"></i>
+                    <h6 class="fw-bold mb-1">Easy Returns</h6>
+                    <p class="small text-muted mb-0">10 Days return policy</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="p-3 bg-white rounded shadow-sm border h-100 transition hover-lift">
+                    <i class="fas fa-shield-alt fs-2 text-primary-custom mb-3"></i>
+                    <h6 class="fw-bold mb-1">Secure Payment</h6>
+                    <p class="small text-muted mb-0">100% secure checkout</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="p-3 bg-white rounded shadow-sm border h-100 transition hover-lift">
+                    <i class="fas fa-headset fs-2 text-primary-custom mb-3"></i>
+                    <h6 class="fw-bold mb-1">24/7 Support</h6>
+                    <p class="small text-muted mb-0">Dedicated support</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

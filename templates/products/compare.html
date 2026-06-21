@@ -1,95 +1,125 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Compare Products | BazaarX{% endblock %}
 
 {% block content %}
+<div class="container mt-4 mb-5">
+    
+    <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+        <h2 class="fw-bold mb-0"><i class="fas fa-code-compare text-primary-custom me-2"></i>Compare Products</h2>
+        {% if products %}
+        <a href="{% url 'products:home' %}" class="btn btn-outline-secondary rounded-pill">
+            <i class="fas fa-plus me-1"></i> Add More
+        </a>
+        {% endif %}
+    </div>
 
-<h2 class="mb-4">Compare Products</h2>
+    {% if products %}
+    <div class="bg-white rounded shadow-sm border overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-bordered mb-0 text-center align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-start text-uppercase text-muted" style="width: 20%; min-width: 150px;">Feature</th>
+                        {% for product in products %}
+                        <th style="width: calc(80% / {{ products|length }}); min-width: 200px;">
+                            <h5 class="fw-bold mb-0 text-dark">{{ product.name|truncatechars:30 }}</h5>
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Image Row -->
+                    <tr>
+                        <td class="text-start fw-semibold bg-light">Product Image</td>
+                        {% for product in products %}
+                        <td class="p-4">
+                            <div class="position-relative d-inline-block">
+                                {% if product.image %}
+                                    <img src="{{ product.image.url }}" class="img-fluid rounded" style="width: 150px; height: 150px; object-fit: contain;">
+                                {% else %}
+                                    <img src="https://placehold.co/150x150/eeeeee/999999?text=No+Image" class="img-fluid rounded">
+                                {% endif %}
+                                
+                                {% if product.discount > 0 %}
+                                <span class="position-absolute top-0 start-0 translate-middle badge rounded-pill bg-danger">
+                                    {{ product.discount }}% OFF
+                                </span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    
+                    <!-- Price Row -->
+                    <tr>
+                        <td class="text-start fw-semibold bg-light">Price</td>
+                        {% for product in products %}
+                        <td>
+                            <span class="fs-5 fw-bold text-danger">₹{{ product.price }}</span>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    
+                    <!-- Stock Row -->
+                    <tr>
+                        <td class="text-start fw-semibold bg-light">Availability</td>
+                        {% for product in products %}
+                        <td>
+                            {% if product.stock > 0 %}
+                                <span class="badge bg-success rounded-pill px-3 py-2"><i class="fas fa-check me-1"></i> In Stock</span>
+                            {% else %}
+                                <span class="badge bg-danger rounded-pill px-3 py-2"><i class="fas fa-times me-1"></i> Out of Stock</span>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    
+                    <!-- Category Row -->
+                    <tr>
+                        <td class="text-start fw-semibold bg-light">Category</td>
+                        {% for product in products %}
+                        <td class="text-muted">{{ product.category.name }}</td>
+                        {% endfor %}
+                    </tr>
+                    
+                    <!-- Action Row -->
+                    <tr class="table-light">
+                        <td class="text-start fw-semibold">Action</td>
+                        {% for product in products %}
+                        <td class="p-3">
+                            <div class="d-flex flex-column gap-2">
+                                <form method="POST" action="{% url 'cart:add_to_cart' product.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-warning w-100 fw-bold" {% if product.stock <= 0 %}disabled{% endif %}>
+                                        <i class="fas fa-cart-plus me-1"></i> Add to Cart
+                                    </button>
+                                </form>
+                                <a href="{% url 'products:product_detail' product.slug %}" class="btn btn-outline-primary w-100">
+                                    View Details
+                                </a>
+                            </div>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-{% if products %}
-<div class="table-responsive">
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Feature</th>
-                {% for product in products %}
-                <th class="text-center">{{ product.name }}</th>
-                {% endfor %}
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><strong>Image</strong></td>
-                {% for product in products %}
-                <td class="text-center">
-                    {% if product.image %}
-                        <img src="{{ product.image.url }}"
-                             style="width:100px; height:100px; object-fit:cover;">
-                    {% else %}
-                        <div class="bg-secondary"
-                             style="width:100px; height:100px; margin:auto;">
-                        </div>
-                    {% endif %}
-                </td>
-                {% endfor %}
-            </tr>
-            <tr>
-                <td><strong>Price</strong></td>
-                {% for product in products %}
-                <td class="text-center">₹{{ product.price }}</td>
-                {% endfor %}
-            </tr>
-            <tr>
-                <td><strong>Discount</strong></td>
-                {% for product in products %}
-                <td class="text-center">{{ product.discount }}%</td>
-                {% endfor %}
-            </tr>
-            <tr>
-                <td><strong>Stock</strong></td>
-                {% for product in products %}
-                <td class="text-center">
-                    {% if product.stock > 0 %}
-                        <span class="text-success">In Stock</span>
-                    {% else %}
-                        <span class="text-danger">Out of Stock</span>
-                    {% endif %}
-                </td>
-                {% endfor %}
-            </tr>
-            <tr>
-                <td><strong>Category</strong></td>
-                {% for product in products %}
-                <td class="text-center">{{ product.category.name }}</td>
-                {% endfor %}
-            </tr>
-            <tr>
-                <td><strong>Action</strong></td>
-                {% for product in products %}
-                <td class="text-center">
-                    <a href="{% url 'products:product_detail' product.slug %}"
-                       class="btn btn-primary btn-sm">
-                        View Details
-                    </a>
-                </td>
-                {% endfor %}
-            </tr>
-        </tbody>
-    </table>
+    {% else %}
+    <div class="text-center py-5 bg-white rounded shadow-sm border mt-4">
+        <div class="d-inline-flex align-items-center justify-content-center bg-light rounded-circle mb-4" style="width: 100px; height: 100px;">
+            <i class="fas fa-balance-scale fs-1 text-muted"></i>
+        </div>
+        <h3 class="fw-bold">No Products to Compare</h3>
+        <p class="text-muted mb-4">Add products to comparison list from the product cards to see them side-by-side.</p>
+        <a href="{% url 'products:home' %}" class="btn btn-primary px-4 py-2 rounded-pill fw-bold">
+            <i class="fas fa-search me-2"></i> Browse Products
+        </a>
+    </div>
+    {% endif %}
+
 </div>
-
-<a href="{% url 'products:home' %}"
-   class="btn btn-outline-secondary mt-3">
-    Continue Shopping
-</a>
-
-{% else %}
-<div class="text-center mt-5">
-    <h4>No products to compare</h4>
-    <p>Add products to compare from product pages</p>
-    <a href="{% url 'products:home' %}"
-       class="btn btn-primary mt-3">
-        Start Shopping
-    </a>
-</div>
-{% endif %}
-
 {% endblock %}
