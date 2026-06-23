@@ -1,1 +1,1 @@
-web: gunicorn BazaarX.wsgi
+web: gunicorn bazarx.wsgi
