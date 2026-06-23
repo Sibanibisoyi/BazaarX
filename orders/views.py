@@ -10,7 +10,10 @@ from django.views.decorators.csrf import csrf_exempt
 from utils.email_utils import send_order_confirmation_email
 from django.template.loader import render_to_string
 from django.http import HttpResponse
-from weasyprint import HTML
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import inch
+import io
 
 
 # Create your views here.
@@ -122,19 +125,41 @@ def payment_success(request):
             messages.error(request, 'Payment verification failed')
             return redirect('orders:my_orders')
         
+
+
+
 @login_required
 def generate_invoice(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
     items = order.orderitem_set.all()
-    html_string = render_to_string(
-        'orders/invoice.html',
-        {'order': order, 'items': items}
-    )
 
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
     
-    pdf = HTML(string=html_string).write_pdf()
-
+    p.setFont("Helvetica-Bold", 20)
+    p.drawString(1*inch, 10*inch, "BazaarX Invoice")
     
-    response = HttpResponse(pdf, content_type='application/pdf')
+    p.setFont("Helvetica", 12)
+    p.drawString(1*inch, 9.5*inch, f"Order ID: {order.id}")
+    p.drawString(1*inch, 9.2*inch, f"Date: {order.created_at}")
+    p.drawString(1*inch, 8.9*inch, f"Customer: {request.user.username}")
+    
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(1*inch, 8.4*inch, "Items:")
+    
+    y = 8.1*inch
+    p.setFont("Helvetica", 11)
+    for item in items:
+        p.drawString(1*inch, y, f"{item.product.name} x{item.quantity} - ₹{item.price}")
+        y -= 0.3*inch
+    
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(1*inch, y - 0.2*inch, f"Total: ₹{order.total_price}")
+    
+    p.showPage()
+    p.save()
+    
+    buffer.seek(0)
+    response = HttpResponse(buffer, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename=invoice_{order.id}.pdf'
     return response

@@ -18,6 +18,7 @@ pydyf==0.12.1
 pyphen==0.17.2
 python-decouple==3.8
 razorpay==2.0.1
+reportlab==5.0.0
 requests==2.34.2
 sqlparse==0.5.5
 tinycss2==1.5.1
