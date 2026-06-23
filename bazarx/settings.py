@@ -162,3 +162,6 @@ DEFAULT_FROM_EMAIL = config('EMAIL_HOST_USER')
 
 import os
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+import os
+PORT = os.environ.get('PORT', 8000)

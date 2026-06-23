@@ -1,1 +1,1 @@
-web: gunicorn bazarx.wsgi
+web: gunicorn bazarx.wsgi --bind 0.0.0.0:$PORT
