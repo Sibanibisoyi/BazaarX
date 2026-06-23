@@ -40,11 +40,11 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'cloudinary',
+    'cloudinary_storage',
     'django.contrib.staticfiles',
-
     'crispy_forms',
     'crispy_bootstrap5',
-
     'users',
     'products',
     'cart',
@@ -54,11 +54,6 @@ INSTALLED_APPS = [
     'returns',
     'dashboard',
     'extras',
-
-    'cloudinary',
-    'cloudinary_storage',
-
-
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
