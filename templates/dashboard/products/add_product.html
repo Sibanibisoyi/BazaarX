@@ -1,0 +1,30 @@
+{% extends "dashboard/admin_base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Add New Product</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <button type="submit"
+                                class="btn btn-primary w-100 mt-3">
+                            Add Product
+                        </button>
+                        <a href="{% url 'dashboard:admin_products' %}"
+                           class="btn btn-secondary w-100 mt-2">
+                            Cancel
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

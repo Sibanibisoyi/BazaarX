@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends "dashboard/admin_base.html" %}
 {% load static %}
 
 {% block title %}Admin Dashboard | BazaarX{% endblock %}
@@ -10,6 +10,38 @@
         <h2 class="mb-0 fw-bold"><i class="fas fa-shield-alt text-primary-custom me-2"></i>Admin Dashboard</h2>
         <span class="badge bg-dark rounded-pill px-3 py-2 fw-medium">Welcome, {{ user.username }}</span>
     </div>
+    <div class="row g-3 mb-4">
+    <div class="col-md-2">
+        <a href="{% url 'dashboard:admin_products' %}"
+           class="btn btn-primary w-100">
+            <i class="fas fa-box me-1"></i> Products
+        </a>
+    </div>
+    <div class="col-md-2">
+        <a href="{% url 'dashboard:admin_orders' %}"
+           class="btn btn-success w-100">
+            <i class="fas fa-shopping-bag me-1"></i> Orders
+        </a>
+    </div>
+    <div class="col-md-2">
+        <a href="#"
+           class="btn btn-warning w-100">
+            <i class="fas fa-users me-1"></i> Users
+        </a>
+    </div>
+    <div class="col-md-2">
+        <a href="#"
+           class="btn btn-info w-100">
+            <i class="fas fa-ticket-alt me-1"></i> Coupons
+        </a>
+    </div>
+    <div class="col-md-2">
+        <a href="{% url 'dashboard:admin_categories' %}"
+           class="btn btn-secondary w-100">
+            <i class="fas fa-list me-1"></i> Categories
+        </a>
+    </div>
+</div>
 
     <!-- Stats Cards -->
     <div class="row g-4 mb-5">

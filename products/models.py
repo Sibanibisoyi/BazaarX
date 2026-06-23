@@ -24,6 +24,8 @@ class Product(models.Model):
     stock       = models.IntegerField(default=0)
     image       = models.ImageField(upload_to='products/', blank=True, null = True)
     is_active   = models.BooleanField(default=True)
+    is_featured = models.BooleanField(default=False)
+    featured_image = models.ImageField(upload_to='products/featured/', blank=True, null=True)
     created_at  = models.DateTimeField(auto_now_add=True)
     updated_at  = models.DateTimeField(auto_now=True)
 

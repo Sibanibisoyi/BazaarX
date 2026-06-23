@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Center — BazaarX</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0f1e;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ── Animated background grid ── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,96,0,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,96,0,0.04) 1px, transparent 1px);
+            background-size: 60px 60px;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0%   { background-position: 0 0; }
+            100% { background-position: 60px 60px; }
+        }
+
+        /* ── Glow orbs ── */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.25;
+            pointer-events: none;
+            animation: float 8s ease-in-out infinite;
+        }
+        .orb-1 { width: 500px; height: 500px; background: #FF6000; top: -150px; right: -100px; animation-delay: 0s; }
+        .orb-2 { width: 400px; height: 400px; background: #7c3aed; bottom: -100px; left: -80px; animation-delay: 4s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50%       { transform: translateY(-30px); }
+        }
+
+        /* ── Card ── */
+        .login-card {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 420px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 2.5rem;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Brand mark ── */
+        .brand-mark {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #FF6000, #e65600);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 8px 25px rgba(255,96,0,0.4);
+        }
+
+        .login-title {
+            color: #ffffff;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 0.25rem;
+            letter-spacing: -0.3px;
+        }
+
+        .login-subtitle {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.82rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        /* ── Form ── */
+        .form-label {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.4rem;
+        }
+
+        .form-control {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px;
+            color: #ffffff;
+            padding: 0.75rem 1rem 0.75rem 2.75rem;
+            font-size: 0.9rem;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+        }
+        .form-control:focus {
+            background: rgba(255,255,255,0.09);
+            border-color: rgba(255,96,0,0.6);
+            box-shadow: 0 0 0 3px rgba(255,96,0,0.15);
+            color: #ffffff;
+            outline: none;
+        }
+        .form-control::placeholder { color: rgba(255,255,255,0.25); }
+
+        .input-group-wrapper {
+            position: relative;
+            margin-bottom: 1.25rem;
+        }
+        .input-icon {
+            position: absolute;
+            left: 0.9rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.3);
+            font-size: 0.85rem;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* ── Button ── */
+        .btn-login {
+            width: 100%;
+            padding: 0.8rem;
+            background: linear-gradient(135deg, #FF6000, #e65600);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 4px 15px rgba(255,96,0,0.35);
+            margin-top: 0.5rem;
+        }
+        .btn-login:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(255,96,0,0.45);
+        }
+        .btn-login:active { transform: translateY(0); }
+
+        /* ── Alerts ── */
+        .alert-custom {
+            background: rgba(239,68,68,0.12);
+            border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 10px;
+            color: #fca5a5;
+            font-size: 0.84rem;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        /* ── Security note ── */
+        .security-note {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: rgba(255,255,255,0.2);
+            font-size: 0.74rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+
+        .divider {
+            border-top: 1px solid rgba(255,255,255,0.08);
+            margin: 1.5rem 0 1rem;
+        }
+
+        /* ── Back link ── */
+        .back-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            color: rgba(255,255,255,0.3);
+            font-size: 0.8rem;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: rgba(255,255,255,0.6); }
+    </style>
+</head>
+<body>
+    <!-- Glow orbs -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="login-card">
+        <!-- Brand -->
+        <div class="brand-mark">
+            <i class="fas fa-shield-halved text-white fs-4"></i>
+        </div>
+        <h1 class="login-title">Control Center</h1>
+        <p class="login-subtitle">BazaarX Administration — Authorized Access Only</p>
+
+        <!-- Error Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == 'error' %}
+                <div class="alert-custom">
+                    <i class="fas fa-circle-exclamation"></i>
+                    {{ message }}
+                </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
+        <!-- Login Form -->
+        <form method="POST" action="" autocomplete="off">
+            {% csrf_token %}
+
+            <label class="form-label">Username</label>
+            <div class="input-group-wrapper">
+                <i class="fas fa-user input-icon"></i>
+                <input type="text" name="username" class="form-control"
+                       placeholder="Enter your username" required autofocus>
+            </div>
+
+            <label class="form-label">Password</label>
+            <div class="input-group-wrapper">
+                <i class="fas fa-lock input-icon"></i>
+                <input type="password" name="password" class="form-control"
+                       placeholder="Enter your password" required>
+            </div>
+
+            <button type="submit" class="btn-login">
+                <i class="fas fa-arrow-right-to-bracket me-2"></i>
+                Authenticate
+            </button>
+        </form>
+
+        <div class="divider"></div>
+
+        <!-- Back to store -->
+        <a href="/" class="back-link">
+            <i class="fas fa-arrow-left" style="font-size: 0.7rem;"></i>
+            Return to BazaarX Store
+        </a>
+
+        <!-- Security note -->
+        <div class="security-note">
+            <i class="fas fa-lock" style="font-size: 0.65rem;"></i>
+            Secured connection · Staff access only
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

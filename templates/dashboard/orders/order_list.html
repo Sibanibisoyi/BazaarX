@@ -1,0 +1,38 @@
+{% extends "dashboard/admin_base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>All Orders</h2>
+    <table class="table table-striped mt-4">
+        <thead class="table-dark">
+            <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Total Price</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>#{{ order.id }}</td>
+                <td>{{ order.user.username }}</td>
+                <td>${{ order.total_price }}</td>
+                <td><span class="badge bg-secondary">{{ order.status }}</span></td>
+                <td>{{ order.created_at|date:"M d, Y H:i" }}</td>
+                <td>
+                    <a href="{% url 'dashboard:admin_order_detail' order.id %}"
+                        class="btn btn-sm btn-info text-white">View Details</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">No orders found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "dashboard/admin_base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Order #{{ orders.id }} Details</h2>
+    <a href="{% url 'dashboard:admin_orders' %}" class="btn btn-outline-secondary btn-sm mb-4">← Back to Orders</a>
+
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title">Order Information</h5>
+            <p class="mb-1"><strong>Customer:</strong> {{ orders.user.username }}</p>
+            <p class="mb-1"><strong>Total Price:</strong> ${{ orders.total_price }}</p>
+            <p class="mb-3"><strong>Date:</strong> {{ orders.created_at|date:"M d, Y H:i" }}</p>
+
+            <!-- Update Status Form -->
+            <form method="POST" action="{% url 'dashboard:admin_update_status' orders.id %}"
+                class="p-3 bg-light rounded">
+                {% csrf_token %}
+                <label for="status" class="form-label fw-bold">Update Order Status:</label>
+                <div class="input-group" style="max-width: 400px;">
+                    <select name="status" id="status" class="form-select">
+                        <option value="Pending" {% if orders.status == 'Pending' %}selected{% endif %}>Pending</option>
+                        <option value="Processing" {% if orders.status == 'Processing' %}selected{% endif %}>Processing
+                        </option>
+                        <option value="Shipped" {% if orders.status == 'Shipped' %}selected{% endif %}>Shipped</option>
+                        <option value="Delivered" {% if orders.status == 'Delivered' %}selected{% endif %}>Delivered
+                        </option>
+                        <option value="Cancelled" {% if orders.status == 'Cancelled' %}selected{% endif %}>Cancelled
+                        </option>
+                    </select>
+                    <button type="submit" class="btn btn-primary">Save Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <h4>Items in this Order</h4>
+    <table class="table table-bordered">
+        <thead class="table-light">
+            <tr>
+                <th>Product Name</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.product.name }}</td>
+                <td>${{ item.price }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>${{ item.get_cost }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center">No items found for this order.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

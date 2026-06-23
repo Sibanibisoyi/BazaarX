@@ -1,0 +1,76 @@
+{% extends "dashboard/admin_base.html" %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="d-flex align-items-center mb-4">
+        <a href="{% url 'dashboard:admin_categories' %}" class="btn btn-outline-secondary btn-sm me-3">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+        <h2 class="mb-0">{{ title }}</h2>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Category Name</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="text-danger small mt-1">{{ form.name.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Slug (URL format)</label>
+                            {{ form.slug }}
+                            <div class="form-text">Must be unique, lower-case, use dashes instead of spaces. Example: `smart-phones`</div>
+                            {% if form.slug.errors %}
+                                <div class="text-danger small mt-1">{{ form.slug.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small mt-1">{{ form.description.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Category Image</label>
+                            {% if category and category.image %}
+                                <div class="mb-2">
+                                    <img src="{{ category.image.url }}" class="rounded shadow-sm" style="max-height: 100px;">
+                                </div>
+                            {% endif %}
+                            {{ form.image }}
+                            {% if form.image.errors %}
+                                <div class="text-danger small mt-1">{{ form.image.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg fw-bold">Save Category</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Add Bootstrap classes to form inputs automatically
+    document.addEventListener("DOMContentLoaded", function() {
+        let inputs = document.querySelectorAll("input[type=text], input[type=file], textarea");
+        inputs.forEach(input => {
+            input.classList.add("form-control");
+        });
+    });
+</script>
+{% endblock %}

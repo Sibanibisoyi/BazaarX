@@ -6,11 +6,23 @@ from django.db.models import Q
 
 # Create your views here.
 def home(request):
-    products = Product.objects.filter(is_active=True)
+    category_slug = request.GET.get('category')
     categories = Category.objects.all()
+    selected_category = None
+    
+    products = Product.objects.filter(is_active=True)
+    if category_slug:
+        selected_category = get_object_or_404(Category, slug=category_slug)
+        products = products.filter(category=selected_category)
+        
+    # Get the featured product for the hero banner
+    featured_product = Product.objects.filter(is_active=True, is_featured=True).first()
+        
     return render(request, 'products/home.html',{
         'products': products,
-        'categories':categories,
+        'categories': categories,
+        'selected_category': selected_category,
+        'featured_product': featured_product,
     })
 
 def product_detail(request, slug):
@@ -32,14 +44,18 @@ def product_detail(request, slug):
 
 def search(request):
     query = request.GET.get('q', '')
+    category_slug = request.GET.get('category')
+    
+    products = Product.objects.filter(is_active=True)
     if query:
-        products = Product.objects.filter(Q(name__icontains=query) | Q(description__icontains=query))
-    else:
-        products = Product.objects.none()
+        products = products.filter(Q(name__icontains=query) | Q(description__icontains=query))
+    if category_slug:
+        products = products.filter(category__slug=category_slug)
+        
     return render(request, 'products/search.html', {
-    'products': products,
-    'query': query,
-})
+        'products': products,
+        'query': query,
+    })
 
 def add_to_compare(request, product_id):
     compare_list = request.session.get('compare_list', [])

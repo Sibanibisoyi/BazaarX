@@ -1,104 +1,292 @@
-<nav class="navbar navbar-expand-lg sticky-top transition" style="background-color: var(--secondary); padding: 1rem 0; z-index: 1020;">
+{% load static %}
+<nav class="navbar navbar-expand-lg sticky-top" style="background-color: var(--secondary); padding: 0.75rem 0; z-index: 1020;">
     <div class="container">
         <!-- Logo -->
-        <a class="navbar-brand text-primary-custom" href="{% url 'products:home' %}">
+        <a class="navbar-brand text-primary-custom fw-bold fs-4" href="{% url 'products:home' %}">
             <i class="fas fa-shopping-bag me-2"></i>BazaarX
         </a>
 
         <!-- Mobile Toggle -->
-        <button class="navbar-toggler border-0 shadow-none text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+        <button class="navbar-toggler border-0 shadow-none text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false">
             <i class="fas fa-bars fs-4"></i>
         </button>
 
         <div class="collapse navbar-collapse" id="navbarMain">
             <!-- Search Bar -->
-            <form class="search-form d-flex mx-auto w-100 my-3 my-lg-0" method="GET" action="{% url 'products:search' %}" style="max-width: 600px;">
-                <div class="input-group">
-                    <input class="form-control border-0 shadow-none px-4 py-2" 
-                           type="search" 
-                           name="q" 
-                           placeholder="Search for products, brands and more..." 
-                           style="border-radius: 20px 0 0 20px;">
-                    <button class="btn btn-primary px-4" type="submit" style="border-radius: 0 20px 20px 0;">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </div>
+            <form class="search-form d-flex mx-auto w-100 my-3 my-lg-0" method="GET" action="{% url 'products:search' %}">
+                <select class="search-category-select d-none d-md-block" name="category">
+                    <option value="">All Categories</option>
+                    {% for category in all_categories %}
+                        <option value="{{ category.slug }}" {% if request.GET.category == category.slug %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+                <input class="form-control border-0 shadow-none px-4 py-2"
+                       type="search"
+                       name="q"
+                       placeholder="Search for products, brands and more...">
+                <button class="btn btn-primary px-4" type="submit">
+                    <i class="fas fa-search"></i>
+                </button>
             </form>
 
             <!-- Navigation Links -->
-            <ul class="navbar-nav ms-auto align-items-center gap-2">
+            <ul class="navbar-nav ms-auto align-items-center gap-1">
+
+                <!-- Flash Sales -->
                 <li class="nav-item d-none d-lg-block">
-                    <a class="nav-link text-white hover-primary transition" href="{% url 'extras:flash_sale' %}">
-                        <i class="fas fa-bolt text-warning"></i> Flash Sales
+                    <a class="nav-link text-white px-3 py-2 rounded-2 transition" href="{% url 'extras:flash_sale' %}" style="font-size: 0.9rem;">
+                        <i class="fas fa-bolt text-warning me-1"></i> Flash Sales
                     </a>
                 </li>
-                
+
+                <!-- Compare -->
                 <li class="nav-item">
-                    <a class="nav-link text-white hover-primary transition position-relative" href="{% url 'products:compare_products' %}" title="Compare">
+                    <a class="nav-link text-white px-2 py-2 rounded-2 transition position-relative" href="{% url 'products:compare_products' %}" title="Compare" style="font-size: 0.9rem;">
                         <i class="fas fa-code-compare fs-5"></i>
                         <span class="d-lg-none ms-2">Compare</span>
                     </a>
                 </li>
 
+                <!-- Wishlist -->
                 <li class="nav-item">
-                    <a class="nav-link text-white hover-primary transition position-relative" href="{% url 'extras:wishlist_detail' %}" title="Wishlist">
+                    <a class="nav-link text-white px-2 py-2 rounded-2 transition position-relative" href="{% url 'extras:wishlist_detail' %}" title="Wishlist" style="font-size: 0.9rem;">
                         <i class="far fa-heart fs-5"></i>
                         <span class="d-lg-none ms-2">Wishlist</span>
                     </a>
                 </li>
 
+                <!-- Cart -->
                 <li class="nav-item">
-                    <a class="nav-link text-white hover-primary transition position-relative" href="{% url 'cart:cart_detail' %}" title="Cart">
+                    <a class="nav-link text-white px-2 py-2 rounded-2 transition position-relative" href="{% url 'cart:cart_detail' %}" title="Cart" style="font-size: 0.9rem;">
                         <i class="fas fa-shopping-cart fs-5"></i>
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
+                        {% if cart_count %}
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.62rem; min-width: 18px;">
                             {{ cart_count }}
                         </span>
+                        {% endif %}
                         <span class="d-lg-none ms-2">Cart</span>
                     </a>
                 </li>
 
-                <!-- User Dropdown -->
-                <li class="nav-item dropdown ms-lg-2 mt-2 mt-lg-0">
-                    <a class="nav-link text-white dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown">
-                        <div class="rounded-circle bg-primary-custom d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
-                            <i class="fas fa-user text-white"></i>
+                <!-- ═══════════════════════════════════
+                     PROFILE DROPDOWN — Role Based
+                ═══════════════════════════════════ -->
+                <li class="nav-item dropdown ms-lg-1 mt-2 mt-lg-0">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 px-2 py-1 rounded-2 transition"
+                       href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"
+                       style="text-decoration: none;">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                             style="width: 36px; height: 36px; background: linear-gradient(135deg, var(--primary), #e65600);">
+                            {% if request.user.is_authenticated and request.user.profile_picture %}
+                                <img src="{{ request.user.profile_picture.url }}" alt="avatar"
+                                     style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;">
+                            {% else %}
+                                <i class="fas fa-user text-white" style="font-size: 0.9rem;"></i>
+                            {% endif %}
                         </div>
-                        <div class="d-flex flex-column lh-1 d-lg-none d-xl-block">
-                            <small class="text-muted" style="font-size: 0.75rem;">Hello,</small>
-                            <span class="fw-semibold">{% if user.is_authenticated %}{{ user.username }}{% else %}Sign In{% endif %}</span>
+                        <div class="lh-1 d-none d-xl-block">
+                            <small class="text-muted d-block" style="font-size: 0.7rem;">
+                                {% if user.is_authenticated %}Hello,{% else %}Welcome{% endif %}
+                            </small>
+                            <span class="text-white fw-semibold" style="font-size: 0.85rem;">
+                                {% if user.is_authenticated %}{{ user.first_name|default:user.username }}{% else %}Sign In{% endif %}
+                            </span>
                         </div>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" style="border-radius: 8px;">
+
+                    <!-- ─── DROPDOWN MENU ─── -->
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2 py-2"
+                        style="border-radius: 12px; min-width: 220px; animation: fadeInDown 0.15s ease;">
+
                         {% if user.is_authenticated %}
-                            <li>
-                                <a class="dropdown-item py-2" href="{% url 'orders:my_orders' %}">
-                                    <i class="fas fa-box me-2 text-primary-custom"></i> My Orders
-                                </a>
-                            </li>
-                            {% if user.is_staff %}
-                            <li>
-                                <a class="dropdown-item py-2" href="{% url 'dashboard:admin_dashboard' %}">
-                                    <i class="fas fa-chart-line me-2 text-primary-custom"></i> Admin Dashboard
-                                </a>
-                            </li>
-                            {% endif %}
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item py-2 text-danger" href="/users/logout/">
-                                    <i class="fas fa-sign-out-alt me-2"></i> Logout
-                                </a>
-                            </li>
-                        {% else %}
-                            <li>
-                                <div class="px-3 py-2 text-center">
-                                    <a href="{% url 'users:login' %}" class="btn btn-primary w-100 mb-2">Login</a>
-                                    <small class="text-muted">New customer? <a href="{% url 'users:register' %}" class="text-primary-custom text-decoration-none fw-medium">Register</a></small>
+
+                            <!-- Header chip -->
+                            <li class="px-3 pb-2 pt-1">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                                         style="width: 40px; height: 40px; background: linear-gradient(135deg, #f3f4f6, #e5e7eb);">
+                                        <i class="fas fa-user text-primary-custom"></i>
+                                    </div>
+                                    <div class="lh-1">
+                                        <div class="fw-semibold text-dark" style="font-size: 0.9rem;">
+                                            {{ user.get_full_name|default:user.username }}
+                                        </div>
+                                        <small class="text-muted" style="font-size: 0.75rem;">{{ user.email }}</small>
+                                    </div>
                                 </div>
+                            </li>
+                            <li><hr class="dropdown-divider my-1"></li>
+
+                            {# ─── ADMIN DROPDOWN ─── #}
+                            {% if user.is_staff %}
+                                <li>
+                                    <a class="dropdown-item py-2 px-3 d-flex align-items-center gap-2" href="/users/profile/">
+                                        <span class="dropdown-icon-wrap"><i class="fas fa-user-circle text-primary-custom"></i></span>
+                                        My Profile
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item py-2 px-3 d-flex align-items-center gap-2" href="{% url 'orders:my_orders' %}">
+                                        <span class="dropdown-icon-wrap"><i class="fas fa-box text-primary-custom"></i></span>
+                                        My Orders
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider my-1"></li>
+                                <li>
+                                    <a class="dropdown-item py-2 px-3 d-flex align-items-center gap-2" href="/bazarx-admin/">
+                                        <span class="dropdown-icon-wrap"><i class="fas fa-sliders text-primary-custom"></i></span>
+                                        Control Center
+                                        <span class="badge ms-auto" style="background: var(--primary); font-size: 0.65rem;">Admin</span>
+                                    </a>
+                                </li>
+
+                            {# ─── SELLER DROPDOWN ─── #}
+                            {% elif is_seller %}
+                                <li>
+                                    <a class="dropdown-item py-2 px-3 d-flex align-items-center gap-2" href="{% url 'seller:seller_dashboard' %}">
+                                        <span class="dropdown-icon-wrap"><i class="fas fa-store text-primary-custom"></i></span>
+                                        Seller Dashboard
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item py-2 px-3 d-flex align-items-center gap-2" href="{% url 'seller:add_product' %}">
+                                        <span class="dropdown-icon-wrap"><i class="fas fa-box-open text-primary-custom"></i></span>
+                                        My Products
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item py-2 px-3 d-flex align-items-center gap-2" href="{% url 'seller:seller_orders' %}">
+                                        <span class="dropdown-icon-wrap"><i class="fas fa-clipboard-list text-primary-custom"></i></span>
+                                        Orders
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider my-1"></li>
+                                <li>
+                                    <a class="dropdown-item py-2 px-3 d-flex align-items-center gap-2" href="{% url 'orders:my_orders' %}">
+                                        <span class="dropdown-icon-wrap"><i class="fas fa-shopping-bag text-primary-custom"></i></span>
+                                        My Purchases
+                                    </a>
+                                </li>
+
+                            {# ─── CUSTOMER DROPDOWN ─── #}
+                            {% else %}
+                                <li>
+                                    <a class="dropdown-item py-2 px-3 d-flex align-items-center gap-2" href="/users/profile/">
+                                        <span class="dropdown-icon-wrap"><i class="fas fa-user-circle text-primary-custom"></i></span>
+                                        My Profile
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item py-2 px-3 d-flex align-items-center gap-2" href="{% url 'orders:my_orders' %}">
+                                        <span class="dropdown-icon-wrap"><i class="fas fa-box text-primary-custom"></i></span>
+                                        My Orders
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item py-2 px-3 d-flex align-items-center gap-2" href="{% url 'extras:wishlist_detail' %}">
+                                        <span class="dropdown-icon-wrap"><i class="far fa-heart text-primary-custom"></i></span>
+                                        Wishlist
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item py-2 px-3 d-flex align-items-center gap-2" href="/users/addresses/">
+                                        <span class="dropdown-icon-wrap"><i class="fas fa-map-marker-alt text-primary-custom"></i></span>
+                                        Addresses
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider my-1"></li>
+                                <li>
+                                    <a class="dropdown-item py-2 px-3 d-flex align-items-center gap-2 text-muted" style="font-size: 0.82rem;" href="{% url 'seller:seller_register' %}">
+                                        <span class="dropdown-icon-wrap"><i class="fas fa-store text-muted"></i></span>
+                                        Become a Seller
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            <!-- Logout — all roles -->
+                            <li><hr class="dropdown-divider my-1"></li>
+                            <li>
+                                <a class="dropdown-item py-2 px-3 d-flex align-items-center gap-2 text-danger" href="/users/logout/">
+                                    <span class="dropdown-icon-wrap"><i class="fas fa-right-from-bracket text-danger"></i></span>
+                                    Logout
+                                </a>
+                            </li>
+
+                        {% else %}
+                            {# ─── GUEST DROPDOWN ─── #}
+                            <li class="px-3 py-2">
+                                <p class="text-muted mb-3" style="font-size: 0.82rem;">Sign in to access your account, orders and wishlist.</p>
+                                <a href="{% url 'users:login' %}" class="btn btn-primary w-100 mb-2 fw-semibold rounded-3">
+                                    <i class="fas fa-right-to-bracket me-1"></i> Login
+                                </a>
+                                <a href="{% url 'users:register' %}" class="btn btn-outline-secondary w-100 fw-semibold rounded-3" style="font-size: 0.9rem;">
+                                    Create Account
+                                </a>
                             </li>
                         {% endif %}
                     </ul>
                 </li>
+
             </ul>
         </div>
     </div>
 </nav>
+
+<!-- Secondary Nav — Categories -->
+<div class="secondary-nav d-none d-lg-block shadow-sm">
+    <div class="container d-flex align-items-center">
+        <a href="{% url 'products:home' %}" class="nav-link text-white fw-bold me-4 border-end pe-4" style="border-color: rgba(255,255,255,0.15) !important; white-space: nowrap;">
+            <i class="fas fa-bars me-2"></i> All Categories
+        </a>
+        <ul class="nav overflow-hidden" style="flex-wrap: nowrap;">
+            {% for category in all_categories|slice:":6" %}
+                <li class="nav-item">
+                    <a href="{% url 'products:home' %}?category={{ category.slug }}"
+                       class="nav-link px-3 {% if request.GET.category == category.slug %}active text-primary-custom fw-semibold{% endif %}"
+                       style="white-space: nowrap; font-size: 0.88rem;">
+                        {{ category.name }}
+                    </a>
+                </li>
+            {% endfor %}
+            <li class="nav-item">
+                <a href="{% url 'extras:flash_sale' %}" class="nav-link px-3 fw-bold" style="color: #FF6060; white-space: nowrap; font-size: 0.88rem;">
+                    <i class="fas fa-fire me-1"></i> Deals Hot
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<!-- Dropdown micro-animation -->
+<style>
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.dropdown-icon-wrap {
+    width: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.dropdown-item {
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: #374151;
+    border-radius: 6px;
+    margin: 1px 6px;
+    width: auto;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+.dropdown-item:hover {
+    background-color: #f9fafb;
+    color: var(--primary, #FF6000);
+}
+.dropdown-item:hover i {
+    color: var(--primary, #FF6000) !important;
+}
+.navbar .nav-link:hover {
+    color: var(--primary, #FF6000) !important;
+}
+</style>
