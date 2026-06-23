@@ -166,6 +166,7 @@ DEFAULT_FROM_EMAIL = config('EMAIL_HOST_USER')
 
 import os
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 import os
 PORT = os.environ.get('PORT', 8000)
