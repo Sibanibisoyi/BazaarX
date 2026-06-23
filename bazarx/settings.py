@@ -95,14 +95,16 @@ WSGI_APPLICATION = 'bazarx.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 
+
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('MYSQLDATABASE'),
-        'USER': os.environ.get('MYSQLUSER'),
-        'PASSWORD': os.environ.get('MYSQLPASSWORD'),
-        'HOST': os.environ.get('MYSQLHOST'),
-        'PORT': os.environ.get('MYSQLPORT'),
+        'NAME': os.environ.get('MYSQLDATABASE', 'bazarx_db'),
+        'USER': os.environ.get('MYSQLUSER', 'bazarx_user'),
+        'PASSWORD': os.environ.get('MYSQLPASSWORD', 'bazarx123'),
+        'HOST': os.environ.get('MYSQLHOST', 'localhost'),
+        'PORT': os.environ.get('MYSQLPORT', '3306'),
     }
 }
 
