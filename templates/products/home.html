@@ -12,7 +12,7 @@
             <aside class="hero-sidebar">
                 <div class="d-flex flex-column h-100" style="overflow-y: auto; max-height: 450px;">
                     {% for category in categories %}
-                        <a href="?category={{ category.slug }}#products-section" class="sidebar-link {% if selected_category == category %}active{% endif %}">
+                        <a href="{% url 'products:category_page' category.slug %}">
                             {% if category.name|lower == 'electronics' %}
                                 <i class="fas fa-desktop"></i>
                             {% elif category.name|lower == 'fashion' %}
@@ -191,7 +191,7 @@
         <div class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-3">
             {% for category in categories %}
             <div class="col">
-                <a href="?category={{ category.slug }}#products-section" class="text-decoration-none">
+               <a href="{% url 'products:category_page' category.slug %}" class="text-decoration-none">
                     <div class="card border-0 shadow-sm rounded-3 h-100 text-center p-3 transition hover-lift">
                         {% if category.image %}
                             <img src="{{ category.image.url }}" alt="{{ category.name }}" class="img-fluid mb-3 mx-auto" style="height: 80px; object-fit: contain;">

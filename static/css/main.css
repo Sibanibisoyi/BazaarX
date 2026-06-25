@@ -63,7 +63,7 @@ h1, h2, h3, h4, h5, h6 {
 .navbar-brand {
     font-weight: 700;
     font-size: 1.8rem;
-    color: var(--primary) !important;
+    color: #FFFFFF !important;
     letter-spacing: -0.5px;
 }
 
@@ -232,11 +232,12 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: 700;
     margin-bottom: 1rem;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    color: #ffffff; /* Makes "Upgrade Your Lifestyle" crisp white */
 }
 
 .hero-subtitle {
     font-size: 1.2rem;
-    color: #e2e8f0;
+    color: #cbd5e1; /* Boosts contrast for the paragraph underneath */
     margin-bottom: 2rem;
 }
 
@@ -584,6 +585,10 @@ h1, h2, h3, h4, h5, h6 {
     padding-left: 5px;
 }
 
+.footer .text-muted {
+    color: #ffffff !important;
+}
+
 .social-icons {
     display: flex;
     gap: 1rem;
@@ -616,7 +621,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* --- Utilities --- */
-.text-primary-custom { color: var(--primary) !important; }
+.text-primary-custom { color: var(--primary) !important;}
 .bg-primary-custom { background-color: var(--primary) !important; color: white; }
 .bg-secondary-custom { background-color: var(--secondary) !important; color: white; }
 
@@ -626,4 +631,18 @@ h1, h2, h3, h4, h5, h6 {
         margin: 1rem 0;
         max-width: 100%;
     }
+}
+
+
+/* Fix for the hidden badge descriptions (On orders over 500, etc.) */
+.hero-banner .d-flex.gap-4 small,
+.hero-banner .d-flex.gap-4 span,
+.hero-banner .d-flex.gap-4 p,
+.hero-banner .d-flex.gap-4 div {
+    color: #FFFFFF !important;
+}
+
+/* Change the icon color inside the hero banner badges to match Premium Tech orange */
+.hero-banner .d-flex.gap-4 i {
+    color: var(--primary) !important;
 }

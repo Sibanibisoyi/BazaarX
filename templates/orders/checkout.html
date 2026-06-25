@@ -53,7 +53,7 @@
                                 <p class="mb-0 small">Please add an address in your profile before proceeding.</p>
                             </div>
                             <!-- In a real app this would link to add address, keeping placeholder for UI completeness -->
-                            <a href="#" class="btn btn-outline-dark btn-sm ms-auto fw-bold">Add Address</a>
+                            <a href="{% url 'users:add_address' %}" class="btn btn-outline-dark btn-sm ms-auto fw-bold">Add Address</a>
                         </div>
                     {% endif %}
                 </div>

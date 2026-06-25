@@ -1,5 +1,5 @@
 {% load static %}
-<nav class="navbar navbar-expand-lg sticky-top" style="background-color: var(--secondary); padding: 0.75rem 0; z-index: 1020;">
+<nav class="navbar navbar-expand-lg sticky-top" style="background-color: var(--secondary); padding: 0.25rem 0; z-index: 1020;">
     <div class="container">
         <!-- Logo -->
         <a class="navbar-brand text-primary-custom fw-bold fs-4" href="{% url 'products:home' %}">
@@ -120,7 +120,7 @@
                             {# ─── ADMIN DROPDOWN ─── #}
                             {% if user.is_staff %}
                                 <li>
-                                    <a class="dropdown-item py-2 px-3 d-flex align-items-center gap-2" href="/users/profile/">
+                                    <a class="dropdown-item py-2 px-3 d-flex align-items-center gap-2" href="{% url 'users:profile' %}">
                                         <span class="dropdown-icon-wrap"><i class="fas fa-user-circle text-primary-custom"></i></span>
                                         My Profile
                                     </a>
@@ -242,10 +242,11 @@
             {% for category in all_categories|slice:":6" %}
                 <li class="nav-item">
                     <a href="{% url 'products:home' %}?category={{ category.slug }}"
+
                        class="nav-link px-3 {% if request.GET.category == category.slug %}active text-primary-custom fw-semibold{% endif %}"
                        style="white-space: nowrap; font-size: 0.88rem;">
                         {{ category.name }}
-                    </a>
+                </a>
                 </li>
             {% endfor %}
             <li class="nav-item">

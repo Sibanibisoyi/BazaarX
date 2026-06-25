@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile — BazaarX{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-3 p-4">
+                <h3 class="fw-bold mb-4">My Profile</h3>
+
+                <div class="mb-3">
+                    <label class="text-muted small">Username</label>
+                    <p class="fw-bold mb-0">{{ request.user.username }}</p>
+                </div>
+
+                <div class="mb-3">
+                    <label class="text-muted small">Email</label>
+                    <p class="fw-bold mb-0">{{ request.user.email }}</p>
+                </div>
+
+                <div class="mb-3">
+                    <label class="text-muted small">Bio</label>
+                    <p class="fw-bold mb-0">{{ profile.bio|default:"Not added yet" }}</p>
+                </div>
+
+                <div class="mb-3">
+                    <label class="text-muted small">Gender</label>
+                    <p class="fw-bold mb-0">{{ profile.gender|default:"Not added yet" }}</p>
+                </div>
+
+                <div class="mb-3">
+                    <label class="text-muted small">Date of Birth</label>
+                    <p class="fw-bold mb-0">{{ profile.dob|default:"Not added yet" }}</p>
+                </div>
+
+                <hr>
+
+                <div class="d-flex gap-2">
+                    <a href="{% url 'users:edit_profile' %}" class="btn btn-primary">Edit Profile</a>
+                    <a href="{% url 'users:address_list' %}" class="btn btn-outline-secondary">My Addresses</a>
+                    <a href="{% url 'users:logout' %}" class="btn btn-outline-danger">Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -77,3 +77,12 @@ def compare_products(request):
     compare_list = request.session.get('compare_list', [])
     products = Product.objects.filter(id__in=compare_list)
     return render(request, 'products/compare.html', {'products': products})
+
+
+def category_page(request, slug):
+    category = get_object_or_404(Category, slug=slug)
+    products = Product.objects.filter(category=category, is_active=True)
+    return render(request, 'products/category_page.html', {
+        'category': category,
+        'products': products,
+    })

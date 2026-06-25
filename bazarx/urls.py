@@ -30,4 +30,5 @@ urlpatterns = [
     path('seller/', include('seller.urls')),
     path('returns/', include('returns.urls')),
     path('bazarx-admin/', include('dashboard.urls')),
+    
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

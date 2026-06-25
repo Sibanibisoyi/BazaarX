@@ -44,7 +44,6 @@ def place_order(request):
             address=address,
             total_price=total
         )
-        
         for item in items:
             OrderItem.objects.create(
                 order=order,
@@ -55,13 +54,7 @@ def place_order(request):
             item.product.stock -= item.quantity
             item.product.save()
         cart.cartitem_set.all().delete()
-        send_order_confirmation_email(order)
-
-        return redirect('orders:order_confirmation', order_id=order.id)
-    
-    else:
-        return redirect('checkout')
-    
+        return redirect('orders:initiate_payment', order_id=order.id)  # redirect to payment
     
 
     

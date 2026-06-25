@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ category.name }} — BazaarX{% endblock %}
+
+{% block content %}
+<div class="container mb-5 mt-4">
+    <h3 class="fw-bold mb-4">Products in {{ category.name }}</h3>
+
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+        {% for product in products %}
+        <div class="col">
+            <div class="product-card">
+                {% if product.discount > 0 %}
+                <div class="discount-badge">{{ product.discount }}% OFF</div>
+                {% endif %}
+                <div class="product-img-wrapper">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-img">
+                    {% else %}
+                        <img src="{% static 'images/placeholder.jpg' %}" class="product-img bg-light">
+                    {% endif %}
+                </div>
+                <div class="product-info">
+                    <div class="product-category">{{ product.category.name }}</div>
+                    <a href="{% url 'products:product_detail' product.slug %}" class="text-decoration-none">
+                        <h3 class="product-title">{{ product.name }}</h3>
+                    </a>
+                    <div class="product-price-container mt-auto">
+                        <span class="product-price">₹{{ product.price }}</span>
+                        <form method="POST" action="{% url 'cart:add_to_cart' product.id %}" class="ms-auto">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary rounded-circle" style="width: 40px; height: 40px;">
+                                <i class="fas fa-cart-plus"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <h4>No products found in {{ category.name }}</h4>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

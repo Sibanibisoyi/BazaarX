@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between mb-3">
+        <h3>My Addresses</h3>
+        <a href="{% url 'users:add_address' %}" class="btn btn-primary">Add New Address</a>
+    </div>
+    {% for address in addresses %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <h6>{{ address.full_name }} — {{ address.phone }}</h6>
+            <p class="mb-1">{{ address.address_line }}, {{ address.city }}, {{ address.state }} - {{ address.pincode }}</p>
+            <a href="{% url 'users:edit_address' address.pk %}" class="btn btn-sm btn-warning">Edit</a>
+            <a href="{% url 'users:delete_address' address.pk %}" class="btn btn-sm btn-danger">Delete</a>
+        </div>
+    </div>
+    {% empty %}
+    <p>No addresses saved yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}
