@@ -14,4 +14,5 @@ urlpatterns = [
     path('addresses/delete/<int:pk>/', views.delete_address, name='delete_address'),
     path('profile/', views.profile_view, name='profile'),
     path('profile/edit/', views.edit_profile, name='edit_profile'),
+    path('points-history/', views.points_history, name='points_history'),
     ]

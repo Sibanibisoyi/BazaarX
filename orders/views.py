@@ -14,31 +14,51 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
 import io
+from users.utils import redeem_points
+from users.utils import award_points
+from decimal import Decimal
 
 
 # Create your views here.
 @login_required
 def checkout(request):
-    cart , created = Cart.objects.get_or_create(user=request.user)
+    cart, created = Cart.objects.get_or_create(user=request.user)
     items = cart.cartitem_set.all()
     if not items:
         return redirect('cart:cart_detail')
     address = Address.objects.filter(user=request.user)
     total = sum(item.product.price * item.quantity for item in items)
+
+    discount = 0
+    if request.method == 'POST':
+        points_to_redeem = int(request.POST.get('points_to_redeem', 0))
+        if points_to_redeem > 0:
+            success, message = redeem_points(request.user, points_to_redeem)
+            if success:
+                discount = points_to_redeem * 1  # 1 point = ₹1
+                total -= discount
+                messages.success(request, f'{points_to_redeem} points redeemed! ₹{discount} discount applied.')
+            else:
+                messages.error(request, message)
+
     return render(request, 'orders/checkout.html', {
-    'items': items,
-    'addresses': address,
-    'total': total,
-})
+        'items': items,
+        'addresses': address,
+        'total': total,
+        'discount': discount,
+    })
+
+
 
 @login_required
 def place_order(request):
     if request.method == 'POST':
         address_id = request.POST.get('address')
+        discount = Decimal(request.POST.get('discount', '0'))
         address = get_object_or_404(Address, id=address_id)
         cart = Cart.objects.get(user=request.user)
         items = cart.cartitem_set.all()
-        total = sum(item.product.price * item.quantity for item in items)
+        total = sum(item.product.price * item.quantity for item in items) - discount
         order = Order.objects.create(
             user=request.user,
             address=address,
@@ -54,8 +74,7 @@ def place_order(request):
             item.product.stock -= item.quantity
             item.product.save()
         cart.cartitem_set.all().delete()
-        return redirect('orders:initiate_payment', order_id=order.id)  # redirect to payment
-    
+        return redirect('orders:initiate_payment', order_id=order.id)
 
     
 @login_required
@@ -111,13 +130,18 @@ def payment_success(request):
                 'razorpay_payment_id': payment_id,
                 'razorpay_signature': signature
             })
+
+            # Award loyalty points after successful payment
+            order = Order.objects.filter(user=request.user).order_by('-created_at').first()
+            if order:
+                award_points(request.user, order.total_price, order.id)
+
             messages.success(request, 'Payment successful')
             return redirect('orders:my_orders')
 
         except:
             messages.error(request, 'Payment verification failed')
             return redirect('orders:my_orders')
-        
 
 
 
@@ -156,3 +180,7 @@ def generate_invoice(request, order_id):
     response = HttpResponse(buffer, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename=invoice_{order.id}.pdf'
     return response
+
+
+
+

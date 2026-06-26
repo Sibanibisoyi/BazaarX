@@ -1,4 +1,5 @@
 from django.db import models
+
 from django.contrib.auth.models import AbstractUser
 
 # Create your models here.
@@ -32,4 +33,29 @@ class Address(models.Model):
 
     def __str__(self):
         return self.full_name
-    
+
+class LoyaltyPoints(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    balance = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.balance} pts"
+
+
+class PointsHistory(models.Model):
+    EARNED = 'earned'
+    REDEEMED = 'redeemed'
+    TYPE_CHOICES = [
+        (EARNED, 'Earned'),
+        (REDEEMED, 'Redeemed'),
+    ]
+
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    points = models.IntegerField()
+    type = models.CharField(max_length=10, choices=TYPE_CHOICES)
+    description = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.type} - {self.points} pts"
+

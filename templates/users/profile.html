@@ -34,11 +34,17 @@
                     <p class="fw-bold mb-0">{{ profile.dob|default:"Not added yet" }}</p>
                 </div>
 
+                <div class="mb-3">
+    <label class="text-muted small">Loyalty Points</label>
+    <p class="fw-bold mb-0 text-primary-custom">{{ loyalty.balance }} points</p>
+</div>
+
                 <hr>
 
                 <div class="d-flex gap-2">
                     <a href="{% url 'users:edit_profile' %}" class="btn btn-primary">Edit Profile</a>
                     <a href="{% url 'users:address_list' %}" class="btn btn-outline-secondary">My Addresses</a>
+                    <a href="{% url 'users:points_history' %}" class="btn btn-outline-secondary">Points History</a>
                     <a href="{% url 'users:logout' %}" class="btn btn-outline-danger">Logout</a>
                 </div>
             </div>

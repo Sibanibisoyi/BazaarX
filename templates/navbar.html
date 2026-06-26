@@ -14,12 +14,12 @@
         <div class="collapse navbar-collapse" id="navbarMain">
             <!-- Search Bar -->
             <form class="search-form d-flex mx-auto w-100 my-3 my-lg-0" method="GET" action="{% url 'products:search' %}">
-                <select class="search-category-select d-none d-md-block" name="category">
-                    <option value="">All Categories</option>
-                    {% for category in all_categories %}
-                        <option value="{{ category.slug }}" {% if request.GET.category == category.slug %}selected{% endif %}>{{ category.name }}</option>
-                    {% endfor %}
-                </select>
+               <select class="search-category-select d-none d-md-block" name="category">
+    <option value="">All Categories</option>
+    {% for category in all_categories %}
+        <option value="{{ category.slug }}" {% if request.GET.category == category.slug %}selected{% endif %}>{{ category.name }}</option>
+    {% endfor %}
+</select> 
                 <input class="form-control border-0 shadow-none px-4 py-2"
                        type="search"
                        name="q"

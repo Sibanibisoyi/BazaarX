@@ -10,48 +10,51 @@
         <div class="hero-layout">
             <!-- Sidebar -->
             <aside class="hero-sidebar">
-                <div class="d-flex flex-column h-100" style="overflow-y: auto; max-height: 450px;">
-                    {% for category in categories %}
-                        <a href="{% url 'products:category_page' category.slug %}">
-                            {% if category.name|lower == 'electronics' %}
-                                <i class="fas fa-desktop"></i>
-                            {% elif category.name|lower == 'fashion' %}
-                                <i class="fas fa-tshirt"></i>
-                            {% elif category.name|lower == 'home & kitchen' or category.name|lower == 'home' %}
-                                <i class="fas fa-couch"></i>
-                            {% elif 'beauty' in category.name|lower or 'personal' in category.name|lower %}
-                                <i class="fas fa-spa"></i>
-                            {% elif 'book' in category.name|lower or 'stationery' in category.name|lower %}
-                                <i class="fas fa-book"></i>
-                            {% elif 'sport' in category.name|lower or 'outdoor' in category.name|lower %}
-                                <i class="fas fa-basketball-ball"></i>
-                            {% elif 'toy' in category.name|lower or 'game' in category.name|lower %}
-                                <i class="fas fa-gamepad"></i>
-                            {% elif 'automotive' in category.name|lower or 'car' in category.name|lower %}
-                                <i class="fas fa-car"></i>
-                            {% elif 'grocery' in category.name|lower or 'food' in category.name|lower %}
-                                <i class="fas fa-shopping-basket"></i>
-                            {% elif 'health' in category.name|lower or 'wellness' in category.name|lower %}
-                                <i class="fas fa-heartbeat"></i>
-                            {% else %}
-                                <i class="fas fa-tags"></i>
-                            {% endif %}
-                            {{ category.name }}
-                            <i class="fas fa-chevron-right ms-auto small"></i>
-                        </a>
-                    {% empty %}
-                        <div class="text-muted p-3 text-center small">No categories found</div>
-                    {% endfor %}
+                <div class="sidebar-scroll">
+                            {% for category in categories %}
+    <a href="{% url 'products:category_page' category.slug %}" class="sidebar-link">
+        <span class="icon-circle">
+            {% if category.name|lower == 'electronics' %}
+                <i class="fas fa-desktop"></i>
+            {% elif category.name|lower == 'fashion' %}
+                <i class="fas fa-tshirt"></i>
+            {% elif category.name|lower == 'home & kitchen' or category.name|lower == 'home' %}
+                <i class="fas fa-couch"></i>
+            {% elif 'beauty' in category.name|lower or 'personal' in category.name|lower %}
+                <i class="fas fa-spa"></i>
+            {% elif 'book' in category.name|lower or 'stationery' in category.name|lower %}
+                <i class="fas fa-book"></i>
+            {% elif 'sport' in category.name|lower or 'outdoor' in category.name|lower %}
+                <i class="fas fa-basketball-ball"></i>
+            {% elif 'toy' in category.name|lower or 'game' in category.name|lower %}
+                <i class="fas fa-gamepad"></i>
+            {% elif 'automotive' in category.name|lower or 'car' in category.name|lower %}
+                <i class="fas fa-car"></i>
+            {% elif 'grocery' in category.name|lower or 'food' in category.name|lower %}
+                <i class="fas fa-shopping-basket"></i>
+            {% elif 'health' in category.name|lower or 'wellness' in category.name|lower %}
+                <i class="fas fa-heartbeat"></i>
+            {% else %}
+                <i class="fas fa-tags"></i>
+            {% endif %}
+        </span>
+        {{ category.name }}
+        <i class="fas fa-chevron-right"></i>
+    </a>
+{% empty %}
+    <div class="text-muted p-3 text-center small">No categories found</div>
+{% endfor %}
                     
-                    <div class="mt-auto px-3">
-                        <a href="{% url 'products:home' %}" class="btn btn-outline-secondary w-100 mt-2 py-2 fw-medium rounded-3 border-0 bg-light text-dark shadow-sm">View All Categories <i class="fas fa-chevron-right ms-1 small"></i></a>
                     </div>
+
+                <div class="px-1 mt-2">
+                    <a href="{% url 'products:home' %}" class="btn btn-outline-secondary w-100 py-2 fw-medium rounded-3 border-0 bg-light text-dark shadow-sm">View All Categories <i class="fas fa-chevron-right ms-1 small"></i></a>
                 </div>
             </aside>
             
             <!-- Hero Banner -->
             <div class="hero-banner">
-                <div class="row w-100 align-items-center" style="position: relative; min-height: 320px;">
+                <div class="row w-100 align-items-center" style="position: relative; min-height: 290px;">
                     {% if featured_product %}
                         <div class="col-lg-7 hero-content">
                             <span class="badge text-warning mb-3 px-0 fw-bold" style="background: transparent; font-size: 0.9rem;"><i class="fas fa-plus me-1"></i> FEATURED PRODUCT</span>

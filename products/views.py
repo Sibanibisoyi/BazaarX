@@ -2,6 +2,10 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from .models import Product, Category
 from django.db.models import Q
+from .models import Review
+from .forms import ReviewForm
+from django.db.models import Avg
+from django.contrib.auth.decorators import login_required
 
 
 # Create your views here.
@@ -33,14 +37,27 @@ def product_detail(request, slug):
     recently_viewed = recently_viewed[:6]
     request.session['recently_viewed'] = recently_viewed
     recently_viewed_products = Product.objects.filter(
-    id__in=recently_viewed).exclude(id=product.id)
+        id__in=recently_viewed).exclude(id=product.id)
     image = product.productimage_set.all()
-    return render(request, 'products/product_detail.html', {
-    'product': product,
-    'images': image,
-    'recently_viewed': recently_viewed_products,
 
-})
+    reviews = Review.objects.filter(product=product).order_by('-created_at')
+    avg_rating = reviews.aggregate(Avg('rating'))['rating__avg']
+    review_count = reviews.count()
+    user_has_reviewed = False
+    if request.user.is_authenticated:
+        user_has_reviewed = Review.objects.filter(product=product, user=request.user).exists()
+    review_form = ReviewForm()
+
+    return render(request, 'products/product_detail.html', {
+        'product': product,
+        'images': image,
+        'recently_viewed': recently_viewed_products,
+        'reviews': reviews,
+        'avg_rating': avg_rating,
+        'review_count': review_count,
+        'user_has_reviewed': user_has_reviewed,
+        'review_form': review_form,
+    })
 
 def search(request):
     query = request.GET.get('q', '')
@@ -86,3 +103,26 @@ def category_page(request, slug):
         'category': category,
         'products': products,
     })
+
+
+
+@login_required
+def submit_review(request, slug):
+    product = get_object_or_404(Product, slug=slug)
+    existing_review = Review.objects.filter(product=product, user=request.user).first()
+
+    if existing_review:
+        messages.info(request, 'You have already reviewed this product')
+        return redirect('products:product_detail', slug=slug)
+
+    if request.method == 'POST':
+        form = ReviewForm(request.POST)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.product = product
+            review.user = request.user
+            review.save()
+            messages.success(request, 'Review submitted successfully')
+            return redirect('products:product_detail', slug=slug)
+
+    return redirect('products:product_detail', slug=slug)

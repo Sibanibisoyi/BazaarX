@@ -5,7 +5,8 @@ from .forms import AddressForm, UserProfileForm
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import UserProfile
-
+from .models import LoyaltyPoints
+from .models import PointsHistory
 
 
 def register(request):
@@ -39,11 +40,15 @@ def logout_view(request):
     return redirect('users:login')
 
 
+
 @login_required
 def profile_view(request):
     profile, created = UserProfile.objects.get_or_create(user=request.user)
-    return render(request, 'users/profile.html', {'profile': profile})
-
+    loyalty, created = LoyaltyPoints.objects.get_or_create(user=request.user)
+    return render(request, 'users/profile.html', {
+        'profile': profile,
+        'loyalty': loyalty,
+    })
 
 
 @login_required
@@ -98,4 +103,9 @@ def edit_profile(request):
 
 
 
+
+@login_required
+def points_history(request):
+    history = PointsHistory.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'users/points_history.html', {'history': history})
 

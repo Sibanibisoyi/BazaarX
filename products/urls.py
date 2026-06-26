@@ -10,5 +10,6 @@ urlpatterns = [
     path('compare/', views.compare_products, name='compare_products'),
     path('compare/add/<int:product_id>/',views.add_to_compare,name='add_to_compare'),
     path('category/<slug:slug>/', views.category_page, name='category_page'),
+    path('<slug:slug>/review/', views.submit_review, name='submit_review'),
 ]
 
