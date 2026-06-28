@@ -1,0 +1,45 @@
+{% extends "dashboard/admin_base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between mb-4">
+        <h2>Flash Sales</h2>
+        <a href="{% url 'dashboard:add_flash_sale' %}" class="btn btn-danger">
+            <i class="fas fa-bolt me-1"></i> Add Flash Sale
+        </a>
+    </div>
+    <table class="table table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>Product</th>
+                <th>Sale Price</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sale in sales %}
+            <tr>
+                <td>{{ sale.product.name }}</td>
+                <td>₹{{ sale.sale_price }}</td>
+                <td>{{ sale.start_time }}</td>
+                <td>{{ sale.end_time }}</td>
+                <td>
+                    {% if sale.is_active %}
+                        <span class="badge bg-success">Active</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'dashboard:delete_flash_sale' sale.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6">No flash sales yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

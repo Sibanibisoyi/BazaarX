@@ -13,8 +13,30 @@
                     <form method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
                         {{ form|crispy }}
-                        <button type="submit"
-                                class="btn btn-warning w-100 mt-3">
+
+                        {% if existing_images %}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Current Additional Images</label>
+                            <div class="d-flex gap-2 flex-wrap">
+                                {% for img in existing_images %}
+                                <div class="position-relative">
+                                    <img src="{{ img.image.url }}" style="width: 80px; height: 80px; object-fit: cover;" class="rounded border">
+                                    <a href="{% url 'dashboard:delete_product_image' img.id %}" 
+                                       class="position-absolute top-0 end-0 btn btn-danger btn-sm p-0" 
+                                       style="width: 20px; height: 20px; font-size: 0.7rem;">✕</a>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Add More Images</label>
+                            <input type="file" name="extra_images" multiple class="form-control">
+                            <small class="text-muted">Select multiple images at once</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-warning w-100 mt-3">
                             Update Product
                         </button>
                         <a href="{% url 'dashboard:admin_products' %}"

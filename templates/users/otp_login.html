@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-2 text-center">Login with OTP</h4>
+                    <p class="text-muted small text-center mb-4">Enter your email to receive OTP</p>
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="alert alert-danger">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="email" name="email" class="form-control mb-3" placeholder="Enter your email" required>
+                        <button type="submit" class="btn btn-primary w-100">Send OTP</button>
+                    </form>
+                    <div class="text-center mt-3">
+                        <a href="{% url 'users:login' %}">Login with Password instead</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

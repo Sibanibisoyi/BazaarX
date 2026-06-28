@@ -126,3 +126,6 @@ def submit_review(request, slug):
             return redirect('products:product_detail', slug=slug)
 
     return redirect('products:product_detail', slug=slug)
+
+
+

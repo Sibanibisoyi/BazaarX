@@ -1,0 +1,41 @@
+{% extends "dashboard/admin_base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-bolt me-2 text-danger"></i>Add Flash Sale</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Product</label>
+                            <select name="product" class="form-control" required>
+                                {% for product in products %}
+                                <option value="{{ product.id }}">{{ product.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Sale Price</label>
+                            <input type="number" name="sale_price" class="form-control" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Start Time</label>
+                            <input type="datetime-local" name="start_time" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">End Time</label>
+                            <input type="datetime-local" name="end_time" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-danger w-100">Create Flash Sale</button>
+                        <a href="{% url 'dashboard:flash_sale_list' %}" class="btn btn-secondary w-100 mt-2">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

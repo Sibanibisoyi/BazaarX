@@ -20,5 +20,9 @@ urlpatterns = [
     path('categories/add/', views.admin_add_category, name='admin_add_category'),
     path('categories/<int:category_id>/edit/', views.admin_edit_category, name='admin_edit_category'),
     path('categories/<int:category_id>/delete/', views.admin_delete_category, name='admin_delete_category'),
+    path('flash-sales/', views.flash_sale_list, name='flash_sale_list'),
+    path('flash-sales/add/', views.add_flash_sale, name='add_flash_sale'),
+    path('flash-sales/delete/<int:pk>/', views.delete_flash_sale, name='delete_flash_sale'),
+    path('products/image/delete/<int:image_id>/', views.delete_product_image, name='delete_product_image'),
 ]
 

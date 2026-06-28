@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from orders.models import Order
-from products.models import Product
+from products.models import Product, ProductImage
 from seller.models import Seller
 from returns.models import ReturnRequest
 from django.db.models import Sum
@@ -107,6 +107,12 @@ def admin_add_product(request):
             product = form.save(commit=False)
             product.seller = request.user
             product.save()
+            
+            # Save multiple images
+            images = request.FILES.getlist('extra_images')
+            for img in images:
+                ProductImage.objects.create(product=product, image=img)
+            
             messages.success(request, 'Product added successfully.')
             return redirect('dashboard:admin_products')
     else:
@@ -121,10 +127,23 @@ def admin_edit_product(request, product_id):
         form = ProductForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
             form.save()
+            
+            # Save multiple additional images
+            images = request.FILES.getlist('extra_images')
+            for img in images:
+                ProductImage.objects.create(product=product, image=img)
+            
             messages.success(request, 'Product updated successfully.')
             return redirect('dashboard:admin_products')
     else:
         form = ProductForm(instance=product)
+    
+    existing_images = ProductImage.objects.filter(product=product)
+    return render(request, 'dashboard/products/edit_product.html', {
+        'form': form,
+        'product': product,
+        'existing_images': existing_images,
+    })
     return render(request, 'dashboard/products/edit_product.html', {'form': form, 'product': product})
 
 
@@ -206,3 +225,45 @@ def admin_delete_category(request, category_id):
     category.delete()
     messages.success(request, 'Category deleted.')
     return redirect('dashboard:admin_categories')
+
+
+from extras.models import FlashSale
+
+@staff_required
+def flash_sale_list(request):
+    sales = FlashSale.objects.all().order_by('-id')
+    return render(request, 'dashboard/flash_sales/flash_sale_list.html', {'sales': sales})
+
+@staff_required
+def add_flash_sale(request):
+    if request.method == 'POST':
+        product_id = request.POST.get('product')
+        sale_price = request.POST.get('sale_price')
+        start_time = request.POST.get('start_time')
+        end_time = request.POST.get('end_time')
+        product = get_object_or_404(Product, id=product_id)
+        FlashSale.objects.create(
+            product=product,
+            sale_price=sale_price,
+            start_time=start_time,
+            end_time=end_time,
+            is_active=True
+        )
+        messages.success(request, 'Flash sale created!')
+        return redirect('dashboard:flash_sale_list')
+    products = Product.objects.filter(is_active=True)
+    return render(request, 'dashboard/flash_sales/add_flash_sale.html', {'products': products})
+
+@staff_required
+def delete_flash_sale(request, pk):
+    sale = get_object_or_404(FlashSale, pk=pk)
+    sale.delete()
+    messages.success(request, 'Flash sale deleted!')
+    return redirect('dashboard:flash_sale_list')
+
+@staff_required
+def delete_product_image(request, image_id):
+    image = get_object_or_404(ProductImage, id=image_id)
+    image.delete()
+    messages.success(request, 'Image deleted.')
+    return redirect('dashboard:admin_edit_product', product_id=image.product.id)

@@ -13,8 +13,14 @@
                     <form method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
                         {{ form|crispy }}
-                        <button type="submit"
-                                class="btn btn-primary w-100 mt-3">
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Additional Images</label>
+                            <input type="file" name="extra_images" multiple class="form-control">
+                            <small class="text-muted">Select multiple images at once</small>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100 mt-3">
                             Add Product
                         </button>
                         <a href="{% url 'dashboard:admin_products' %}"
