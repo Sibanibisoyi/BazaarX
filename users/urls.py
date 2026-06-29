@@ -18,4 +18,8 @@ urlpatterns = [
     path('verify-otp/', views.verify_otp, name='verify_otp'),
     path('otp-login/', views.otp_login, name='otp_login'),
     path('verify-login-otp/', views.verify_login_otp, name='verify_login_otp'),
-    ]
+    path('forgot-password/', views.forgot_password, name='forgot_password'),
+    path('reset-password-done/', views.password_reset_done, name='password_reset_done'),
+    path('reset-password/<uidb64>/<token>/', views.password_reset_confirm, name='password_reset_confirm'),
+    path('reset-password-complete/', views.password_reset_complete, name='password_reset_complete'),
+]

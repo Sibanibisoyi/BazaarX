@@ -11,6 +11,15 @@ from .utils import generate_otp, send_otp_email
 from .models import OTP
 from .models import CustomUser
 
+# Imports for Password Reset
+from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.contrib.sites.shortcuts import get_current_site
+
 
 
 
@@ -181,3 +190,82 @@ def verify_login_otp(request):
             messages.error(request, 'OTP not found.')
     
     return render(request, 'users/verify_login_otp.html')
+
+
+def forgot_password(request):
+    if request.method == 'POST':
+        form = PasswordResetForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data.get('email')
+            associated_users = CustomUser.objects.filter(email=email, is_active=True)
+            if associated_users.exists():
+                for user in associated_users:
+                    # Generate reset credentials
+                    uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+                    token = default_token_generator.make_token(user)
+                    
+                    # Context for email template
+                    current_site = get_current_site(request)
+                    context = {
+                        'email': user.email,
+                        'domain': current_site.domain,
+                        'site_name': current_site.name,
+                        'uid': uidb64,
+                        'token': token,
+                        'protocol': 'https' if request.is_secure() else 'http',
+                        'user': user,
+                    }
+                    
+                    # Render and send email
+                    subject = "Password Reset Requested"
+                    email_content = render_to_string('users/password_reset_email.html', context)
+                    try:
+                        send_mail(
+                            subject,
+                            email_content,
+                            None,  # Uses DEFAULT_FROM_EMAIL from settings
+                            [user.email],
+                            fail_silently=False,
+                        )
+                    except Exception as e:
+                        # Log error if any mail service issue occurs
+                        pass
+                
+                messages.success(request, "A password reset email has been sent.")
+                return redirect('users:password_reset_done')
+            else:
+                # Anti-user-enumeration success message
+                messages.success(request, "A password reset email has been sent.")
+                return redirect('users:password_reset_done')
+    else:
+        form = PasswordResetForm()
+    return render(request, 'users/forgot_password.html', {'form': form})
+
+
+def password_reset_done(request):
+    return render(request, 'users/password_reset_done.html')
+
+
+def password_reset_confirm(request, uidb64, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = CustomUser.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        if request.method == 'POST':
+            form = SetPasswordForm(user, request.POST)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "Your password has been reset successfully.")
+                return redirect('users:password_reset_complete')
+        else:
+            form = SetPasswordForm(user)
+        return render(request, 'users/password_reset_confirm.html', {'form': form, 'validlink': True})
+    else:
+        return render(request, 'users/password_reset_confirm.html', {'validlink': False})
+
+
+def password_reset_complete(request):
+    return render(request, 'users/password_reset_complete.html')
