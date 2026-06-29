@@ -9,8 +9,16 @@
         <div class="card-body">
             <h5 class="card-title">Order Information</h5>
             <p class="mb-1"><strong>Customer:</strong> {{ orders.user.username }}</p>
-            <p class="mb-1"><strong>Total Price:</strong> ${{ orders.total_price }}</p>
-            <p class="mb-3"><strong>Date:</strong> {{ orders.created_at|date:"M d, Y H:i" }}</p>
+            <p class="mb-1"><strong>Total Price:</strong> ₹{{ orders.total_price }}</p>
+            <p class="mb-1"><strong>Date:</strong> {{ orders.created_at|date:"M d, Y H:i" }}</p>
+            <p class="mb-3">
+                <strong>Payment Method:</strong>
+                {% if orders.payment_method == 'cod' %}
+                    <span class="badge bg-warning text-dark ms-1"><i class="fas fa-money-bill-wave me-1"></i>Cash on Delivery</span>
+                {% else %}
+                    <span class="badge bg-success ms-1"><i class="fas fa-credit-card me-1"></i>Online Payment (Razorpay)</span>
+                {% endif %}
+            </p>
 
             <!-- Update Status Form -->
             <form method="POST" action="{% url 'dashboard:admin_update_status' orders.id %}"

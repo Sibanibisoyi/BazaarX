@@ -135,6 +135,20 @@
                         <p class="text-muted small mb-0">Address not found or deleted.</p>
                     {% endif %}
                 </div>
+
+                <!-- Payment Method -->
+                <div class="bg-white rounded shadow-sm border p-4">
+                    <h5 class="fw-bold mb-2 border-bottom pb-2">Payment</h5>
+                    {% if order.payment_method == 'cod' %}
+                        <span class="badge bg-warning text-dark px-3 py-2 fs-6">
+                            <i class="fas fa-money-bill-wave me-1"></i> Cash on Delivery
+                        </span>
+                    {% else %}
+                        <span class="badge bg-success px-3 py-2 fs-6">
+                            <i class="fas fa-credit-card me-1"></i> Online (Razorpay)
+                        </span>
+                    {% endif %}
+                </div>
                 
                 <!-- Actions -->
                 {% if order.status == 'delivered' %}
@@ -143,6 +157,16 @@
                     <p class="small text-muted mb-3">You can request a return within 10 days of delivery.</p>
                     <a href="{% url 'returns:raise_return' order.id %}" class="btn btn-warning w-100 fw-bold shadow-sm text-dark">
                         <i class="fas fa-undo me-2"></i> Raise Return Request
+                    </a>
+                </div>
+                {% endif %}
+
+                {% if order.status == 'pending' or order.status == 'confirmed' %}
+                <div class="bg-white rounded shadow-sm border p-4 text-center border-top border-danger border-3">
+                    <h6 class="fw-bold mb-2 text-danger">Want to cancel this order?</h6>
+                    <p class="small text-muted mb-3">You can cancel this order as it hasn't been shipped yet.</p>
+                    <a href="{% url 'orders:cancel_order' order.id %}" class="btn btn-outline-danger w-100 fw-bold shadow-sm">
+                        <i class="fas fa-times-circle me-2"></i> Cancel Order
                     </a>
                 </div>
                 {% endif %}

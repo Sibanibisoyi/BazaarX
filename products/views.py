@@ -6,6 +6,7 @@ from .models import Review
 from .forms import ReviewForm
 from django.db.models import Avg
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 
 
 # Create your views here.
@@ -21,9 +22,14 @@ def home(request):
         
     # Get the featured product for the hero banner
     featured_product = Product.objects.filter(is_active=True, is_featured=True).first()
+
+    paginator = Paginator(products, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
         
     return render(request, 'products/home.html',{
-        'products': products,
+        'products': page_obj,
+        'page_obj': page_obj,
         'categories': categories,
         'selected_category': selected_category,
         'featured_product': featured_product,
@@ -68,9 +74,14 @@ def search(request):
         products = products.filter(Q(name__icontains=query) | Q(description__icontains=query))
     if category_slug:
         products = products.filter(category__slug=category_slug)
+
+    paginator = Paginator(products, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
         
     return render(request, 'products/search.html', {
-        'products': products,
+        'products': page_obj,
+        'page_obj': page_obj,
         'query': query,
     })
 
@@ -99,9 +110,15 @@ def compare_products(request):
 def category_page(request, slug):
     category = get_object_or_404(Category, slug=slug)
     products = Product.objects.filter(category=category, is_active=True)
+
+    paginator = Paginator(products, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     return render(request, 'products/category_page.html', {
         'category': category,
-        'products': products,
+        'products': page_obj,
+        'page_obj': page_obj,
     })
 
 

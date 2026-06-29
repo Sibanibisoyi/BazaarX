@@ -17,6 +17,9 @@ import io
 from users.utils import redeem_points
 from users.utils import award_points
 from decimal import Decimal
+from django.core.paginator import Paginator
+from coupons.models import Coupon
+from django.utils import timezone
 
 
 # Create your views here.
@@ -27,25 +30,50 @@ def checkout(request):
     if not items:
         return redirect('cart:cart_detail')
     address = Address.objects.filter(user=request.user)
-    total = sum(item.product.price * item.quantity for item in items)
+    subtotal = sum(item.effective_price() * item.quantity for item in items)
 
-    discount = 0
+    points_discount = Decimal('0')
     if request.method == 'POST':
         points_to_redeem = int(request.POST.get('points_to_redeem', 0))
         if points_to_redeem > 0:
             success, message = redeem_points(request.user, points_to_redeem)
             if success:
-                discount = points_to_redeem * 1  # 1 point = ₹1
-                total -= discount
-                messages.success(request, f'{points_to_redeem} points redeemed! ₹{discount} discount applied.')
+                points_discount = Decimal(points_to_redeem)  # 1 point = ₹1
+                messages.success(request, f'{points_to_redeem} points redeemed! ₹{points_discount} discount applied.')
             else:
                 messages.error(request, message)
+
+    # Apply coupon from session
+    coupon = None
+    coupon_discount = Decimal('0')
+    coupon_id = request.session.get('coupon_id')
+    if coupon_id:
+        try:
+            coupon = Coupon.objects.get(
+                id=coupon_id, is_active=True,
+                valid_from__lte=timezone.now(),
+                valid_to__gte=timezone.now()
+            )
+            # Re-check the user hasn't already used it
+            if request.user not in coupon.used_by.all():
+                coupon_discount = (subtotal * coupon.discount) / 100
+            else:
+                coupon = None
+                request.session['coupon_id'] = None
+        except Coupon.DoesNotExist:
+            request.session['coupon_id'] = None
+
+    total = subtotal - points_discount - coupon_discount
 
     return render(request, 'orders/checkout.html', {
         'items': items,
         'addresses': address,
+        'subtotal': subtotal,
         'total': total,
-        'discount': discount,
+        'points_discount': points_discount,
+        'coupon': coupon,
+        'coupon_discount': coupon_discount,
+        'discount': points_discount,  # legacy field for place_order hidden input
     })
 
 
@@ -54,27 +82,69 @@ def checkout(request):
 def place_order(request):
     if request.method == 'POST':
         address_id = request.POST.get('address')
-        discount = Decimal(request.POST.get('discount', '0'))
+        points_discount = Decimal(request.POST.get('discount', '0'))
+        payment_method = request.POST.get('payment_method', 'razorpay')
         address = get_object_or_404(Address, id=address_id)
         cart = Cart.objects.get(user=request.user)
         items = cart.cartitem_set.all()
-        total = sum(item.product.price * item.quantity for item in items) - discount
+        subtotal = sum(item.effective_price() * item.quantity for item in items)
+
+        # Re-apply coupon from session server-side (never trust the client)
+        coupon = None
+        coupon_discount = Decimal('0')
+        coupon_id = request.session.get('coupon_id')
+        if coupon_id:
+            try:
+                coupon = Coupon.objects.get(
+                    id=coupon_id, is_active=True,
+                    valid_from__lte=timezone.now(),
+                    valid_to__gte=timezone.now()
+                )
+                if request.user not in coupon.used_by.all():
+                    coupon_discount = (subtotal * coupon.discount) / 100
+                else:
+                    coupon = None
+            except Coupon.DoesNotExist:
+                pass
+
+        total = subtotal - points_discount - coupon_discount
+        if total < 0:
+            total = Decimal('0')
+
         order = Order.objects.create(
             user=request.user,
             address=address,
-            total_price=total
+            total_price=total,
+            payment_method=payment_method,
         )
         for item in items:
             OrderItem.objects.create(
                 order=order,
                 product=item.product,
+                variant=item.variant,
                 quantity=item.quantity,
-                price=item.product.price
+                price=item.effective_price()
             )
-            item.product.stock -= item.quantity
-            item.product.save()
+            # Deduct from variant stock if applicable, else product stock
+            if item.variant:
+                item.variant.stock -= item.quantity
+                item.variant.save()
+            else:
+                item.product.stock -= item.quantity
+                item.product.save()
         cart.cartitem_set.all().delete()
-        return redirect('orders:initiate_payment', order_id=order.id)
+
+        # Mark coupon as used and clear session
+        if coupon:
+            coupon.used_by.add(request.user)
+            request.session['coupon_id'] = None
+
+        if payment_method == 'cod':
+            award_points(request.user, order.total_price, order.id)
+            messages.success(request, 'Order placed successfully! Pay on delivery.')
+            return redirect('orders:order_confirmation', order_id=order.id)
+        else:
+            return redirect('orders:initiate_payment', order_id=order.id)
 
     
 @login_required
@@ -85,7 +155,10 @@ def order_confirmation(request, order_id):
 @login_required
 def my_orders(request):
     orders = Order.objects.filter(user=request.user).order_by('-created_at')
-    return render(request, 'orders/my_orders.html', {'orders': orders})
+    paginator = Paginator(orders, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'orders/my_orders.html', {'orders': page_obj, 'page_obj': page_obj})
 
 @login_required
 def order_detail(request, order_id):
@@ -95,6 +168,27 @@ def order_detail(request, order_id):
         'order': order,
         'items': items,
     })
+
+@login_required
+def cancel_order(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+
+    if order.status not in ['pending', 'confirmed']:
+        messages.error(request, 'This order cannot be cancelled as it has already been shipped or delivered.')
+        return redirect('orders:order_detail', order_id=order.id)
+
+    if request.method == 'POST':
+        # Restock the products
+        for item in order.orderitem_set.all():
+            item.product.stock += item.quantity
+            item.product.save()
+
+        order.status = 'cancelled'
+        order.save()
+        messages.success(request, f'Order #{order.id} has been cancelled successfully.')
+        return redirect('orders:my_orders')
+
+    return render(request, 'orders/cancel_order_confirm.html', {'order': order})
 
 @login_required
 def initiate_payment(request, order_id):

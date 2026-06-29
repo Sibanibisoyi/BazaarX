@@ -12,6 +12,7 @@ from django.contrib.auth import authenticate, login, logout
 from products.models import Product, Category
 from seller.forms import ProductForm
 from .forms import CategoryForm
+from django.core.paginator import Paginator
 
 
 # ─── Reusable staff guard decorator ──────────────────────────────────────────
@@ -96,7 +97,10 @@ def admin_logout(request):
 @staff_required
 def admin_products(request):
     products = Product.objects.all().order_by('-id')
-    return render(request, 'dashboard/products/product_list.html', {'products': products})
+    paginator = Paginator(products, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'dashboard/products/product_list.html', {'products': page_obj, 'page_obj': page_obj})
 
 
 @staff_required
@@ -160,7 +164,10 @@ def admin_delete_product(request, product_id):
 @staff_required
 def admin_orders(request):
     orders = Order.objects.all().order_by('-created_at')
-    return render(request, 'dashboard/orders/order_list.html', {'orders': orders})
+    paginator = Paginator(orders, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'dashboard/orders/order_list.html', {'orders': page_obj, 'page_obj': page_obj})
 
 
 @staff_required

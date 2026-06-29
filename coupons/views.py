@@ -15,8 +15,13 @@ def apply_coupon(request):
                 valid_from__lte=timezone.now(),
                 valid_to__gte=timezone.now()
             )
-            request.session['coupon_id'] = coupon.id
-            messages.success(request, 'Coupon applied successfully')
+            
+            if request.user in coupon.used_by.all():
+                request.session['coupon_id'] = None
+                messages.error(request, 'You have already used this coupon')
+            else:
+                request.session['coupon_id'] = coupon.id
+                messages.success(request, 'Coupon applied successfully')
 
         except Coupon.DoesNotExist:
             request.session['coupon_id'] = None
