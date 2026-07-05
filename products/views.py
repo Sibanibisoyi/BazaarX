@@ -50,8 +50,11 @@ def product_detail(request, slug):
     avg_rating = reviews.aggregate(Avg('rating'))['rating__avg']
     review_count = reviews.count()
     user_has_reviewed = False
+    in_wishlist = False
     if request.user.is_authenticated:
         user_has_reviewed = Review.objects.filter(product=product, user=request.user).exists()
+        from extras.models import Wishlist
+        in_wishlist = Wishlist.objects.filter(user=request.user, product=product).exists()
     review_form = ReviewForm()
 
     return render(request, 'products/product_detail.html', {
@@ -63,6 +66,7 @@ def product_detail(request, slug):
         'review_count': review_count,
         'user_has_reviewed': user_has_reviewed,
         'review_form': review_form,
+        'in_wishlist': in_wishlist,
     })
 
 def search(request):

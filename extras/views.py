@@ -12,6 +12,7 @@ def add_to_wishlist(request, product_id):
     product = get_object_or_404(Product, id = product_id)
     wishlist_item, created = Wishlist.objects.get_or_create(user=request.user, product=product)
     
+
     if created:
         messages.success(request, 'Added to wishlist')
     else:
@@ -27,6 +28,7 @@ def remove_from_wishlist(request, product_id):
     ).delete()
     messages.success(request, 'Removed from wishlist')
     return redirect('extras:wishlist_detail')
+
 
 @login_required
 def wishlist_detail(request):

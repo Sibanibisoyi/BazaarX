@@ -53,5 +53,47 @@
     
     <!-- Custom JS -->
     <script src="{% static 'js/main.js' %}"></script>
+    <script>
+const btn = document.getElementById('voiceSearchBtn');
+if (btn && 'webkitSpeechRecognition' in window) {
+    const recognition = new webkitSpeechRecognition();
+    recognition.lang = 'en-IN';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    btn.addEventListener('click', () => {
+        recognition.start();
+        btn.classList.add('listening');
+        console.log('Listening started...');
+    });
+
+    recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    console.log('Heard:', transcript);
+    
+    const searchForm = document.querySelector('.search-form');
+    const searchInput = searchForm ? searchForm.querySelector('input[name="q"]') : null;
+    
+    console.log('Search input found:', searchInput);
+    
+    if (searchInput) {
+        searchInput.value = transcript;
+        searchForm.submit();
+    }
+};
+
+    recognition.onend = () => {
+        btn.classList.remove('listening');
+        console.log('Listening ended');
+    };
+
+    recognition.onerror = (e) => {
+        btn.classList.remove('listening');
+        console.log('Error:', e.error);
+    };
+} else {
+    console.log('Voice not supported or button not found');
+}
+</script>
 </body>
 </html>

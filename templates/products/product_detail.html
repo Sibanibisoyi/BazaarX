@@ -115,9 +115,15 @@
                     </button>
                 </form>
                 
+                {% if in_wishlist %}
+                <a href="{% url 'extras:remove_from_wishlist' product.id %}" class="btn btn-outline-danger py-3 px-4 shadow-sm d-flex align-items-center justify-content-center transition" title="Remove from Wishlist">
+                    <i class="fas fa-heart fs-5"></i>
+                </a>
+                {% else %}
                 <a href="{% url 'extras:add_to_wishlist' product.id %}" class="btn btn-outline-secondary py-3 px-4 shadow-sm d-flex align-items-center justify-content-center transition hover-primary" title="Add to Wishlist">
                     <i class="far fa-heart fs-5"></i>
                 </a>
+                {% endif %}
                 
                 <a href="{% url 'products:add_to_compare' product.id %}" class="btn btn-outline-secondary py-3 px-4 shadow-sm d-flex align-items-center justify-content-center transition hover-primary" title="Compare">
                     <i class="fas fa-code-compare fs-5"></i>

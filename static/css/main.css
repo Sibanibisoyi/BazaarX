@@ -708,3 +708,13 @@ h1, h2, h3, h4, h5, h6 {
     transform: scale(1.05);
     border-color: var(--primary) !important;
 }
+
+#voiceSearchBtn.listening {
+    background-color: #ff4444;
+    border-color: #ff4444;
+    color: white;
+}
+
+#voiceSearchBtn.listening i {
+    animation: pulse 1s infinite;
+}

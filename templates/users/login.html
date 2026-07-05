@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load socialaccount %}
+
 
 {% block title %}Login | BazaarX{% endblock %}
 
@@ -68,6 +70,12 @@
                                 Create your BazaarX account
                             </a>
                         </div>
+                        <div class="text-center mt-3">
+    <a href="{% provider_login_url 'google' %}" class="btn btn-outline-secondary w-100 py-2 fw-medium rounded transition d-flex align-items-center justify-content-center gap-2">
+        <img src="https://www.google.com/favicon.ico" width="18" height="18" alt="Google">
+        Continue with Google
+    </a>
+</div>
                         <div class="text-center mt-3">
     <a href="{% url 'users:otp_login' %}">Login with OTP instead</a>
 </div>
