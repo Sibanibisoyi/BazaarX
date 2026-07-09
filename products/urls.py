@@ -11,5 +11,8 @@ urlpatterns = [
     path('compare/add/<int:product_id>/',views.add_to_compare,name='add_to_compare'),
     path('category/<slug:slug>/', views.category_page, name='category_page'),
     path('<slug:slug>/review/', views.submit_review, name='submit_review'),
+    path('ajax/load-more/', views.load_more_products, name='load_more_products'),
+    path('ajax/category/<slug:slug>/load-more/', views.load_more_category_products, name='load_more_category_products'),
+    path('ajax/search-autocomplete/', views.search_autocomplete, name='search_autocomplete'),
 ]
 

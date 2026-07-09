@@ -6,13 +6,12 @@ from .models import UserProfile
 
 
 
-class RegisterForm(UserCreationForm):
-    email = forms.EmailField()
-    phone = forms.CharField(max_length=15)
-
-    class Meta:
-        model = get_user_model()
-        fields = ['username', 'email', 'phone', 'password1', 'password2']
+class AuthForm(forms.Form):
+    email_or_phone = forms.CharField(
+        max_length=150, 
+        label="Email or Mobile Number",
+        widget=forms.TextInput(attrs={'placeholder': 'Enter email or phone number', 'class': 'form-control'})
+    )
 
 
 from .models import Address

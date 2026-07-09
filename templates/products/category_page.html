@@ -7,42 +7,73 @@
 <div class="container mb-5 mt-4">
     <h3 class="fw-bold mb-4">Products in {{ category.name }}</h3>
 
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
-        {% for product in products %}
-        <div class="col">
-            <div class="product-card">
-                {% if product.discount > 0 %}
-                <div class="discount-badge">{{ product.discount }}% OFF</div>
-                {% endif %}
-                <div class="product-img-wrapper">
-                    {% if product.image %}
-                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-img">
-                    {% else %}
-                        <img src="{% static 'images/placeholder.jpg' %}" class="product-img bg-light">
-                    {% endif %}
-                </div>
-                <div class="product-info">
-                    <div class="product-category">{{ product.category.name }}</div>
-                    <a href="{% url 'products:product_detail' product.slug %}" class="text-decoration-none">
-                        <h3 class="product-title">{{ product.name }}</h3>
-                    </a>
-                    <div class="product-price-container mt-auto">
-                        <span class="product-price">₹{{ product.price }}</span>
-                        <form method="POST" action="{% url 'cart:add_to_cart' product.id %}" class="ms-auto">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-primary rounded-circle" style="width: 40px; height: 40px;">
-                                <i class="fas fa-cart-plus"></i>
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4" id="product-grid">
+        {% include 'products/partials/product_cards.html' with products=products %}
+    </div>
+
+    <!-- Infinite Scroll Sentinel -->
+    <div id="scroll-sentinel" style="height: 1px; margin-top: 2rem;"></div>
+
+    <!-- Loading Spinner -->
+    <div id="scroll-loader" class="text-center py-4" style="display: none;">
+        <div class="d-inline-flex align-items-center gap-3 px-4 py-2 bg-white rounded-pill shadow-sm border">
+            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+            <span class="text-muted fw-medium" style="font-size: 0.9rem;">Loading more products...</span>
         </div>
-        {% empty %}
-        <div class="col-12 text-center py-5">
-            <h4>No products found in {{ category.name }}</h4>
-        </div>
-        {% endfor %}
+    </div>
+
+    <!-- End of Products Message -->
+    <div id="scroll-end" class="text-center py-4" style="display: none;">
+        <span class="text-muted small"><i class="fas fa-check-circle text-success me-2"></i>You've seen all products in {{ category.name }}!</span>
     </div>
 </div>
+
+<!-- Infinite Scroll JS for Category Page -->
+<script>
+(function() {
+    const grid     = document.getElementById('product-grid');
+    const sentinel = document.getElementById('scroll-sentinel');
+    const loader   = document.getElementById('scroll-loader');
+    const endMsg   = document.getElementById('scroll-end');
+
+    {% if page_obj.has_next %}
+    let nextPage = {{ page_obj.next_page_number }};
+    {% else %}
+    let nextPage = null;
+    {% endif %}
+    let isFetching = false;
+
+    if (!nextPage) {
+        endMsg.style.display = 'block';
+    }
+
+    const observer = new IntersectionObserver(function(entries) {
+        if (entries[0].isIntersecting && nextPage && !isFetching) {
+            isFetching = true;
+            loader.style.display = 'block';
+
+            fetch(`/ajax/category/{{ category.slug }}/load-more/?page=${nextPage}`)
+                .then(res => res.json())
+                .then(data => {
+                    grid.insertAdjacentHTML('beforeend', data.html);
+                    if (data.has_next) {
+                        nextPage = data.next_page;
+                    } else {
+                        nextPage = null;
+                        observer.disconnect();
+                        endMsg.style.display = 'block';
+                    }
+                    loader.style.display = 'none';
+                    isFetching = false;
+                })
+                .catch(() => {
+                    loader.style.display = 'none';
+                    isFetching = false;
+                });
+        }
+    }, { rootMargin: '200px' });
+
+    if (sentinel) observer.observe(sentinel);
+})();
+</script>
 {% endblock %}

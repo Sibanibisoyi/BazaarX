@@ -227,124 +227,79 @@
             {% endif %}
         </h3>
         
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
-            {% for product in products %}
-            <div class="col">
-                <div class="product-card">
-                    <!-- Badges -->
-                    {% if product.discount > 0 %}
-                    <div class="discount-badge">
-                        {{ product.discount }}% OFF
-                    </div>
-                    {% endif %}
-                    
-                    <!-- Image -->
-                    <div class="product-img-wrapper">
-                        {% if product.image %}
-                            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-img">
-                        {% else %}
-                            <img src="{% static 'images/placeholder.jpg' %}" alt="{{ product.name }}" class="product-img bg-light" onerror="this.src='https://placehold.co/400x400/eeeeee/999999?text=No+Image'">
-                        {% endif %}
-                        
-                        <!-- Hover Actions -->
-                        <div class="product-actions">
-                            <a href="{% url 'extras:add_to_wishlist' product.id %}" class="btn-action text-decoration-none" title="Add to Wishlist">
-                                <i class="far fa-heart"></i>
-                            </a>
-                            <a href="{% url 'products:add_to_compare' product.id %}" class="btn-action text-decoration-none" title="Compare">
-                                <i class="fas fa-code-compare"></i>
-                            </a>
-                            <a href="{% url 'products:product_detail' product.slug %}" class="btn-action text-decoration-none" title="Quick View">
-                                <i class="far fa-eye"></i>
-                            </a>
-                        </div>
-                    </div>
-                    
-                    <!-- Info -->
-                    <div class="product-info">
-                        <div class="product-category">{{ product.category.name }}</div>
-                        <a href="{% url 'products:product_detail' product.slug %}" class="text-decoration-none">
-                            <h3 class="product-title hover-primary" title="{{ product.name }}">{{ product.name }}</h3>
-                        </a>
-                        
-                        <!-- Rating Placeholder -->
-                        <div class="d-flex text-warning mb-2" style="font-size: 0.8rem;">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star-half-alt"></i>
-                            <span class="text-muted ms-1">(4.5)</span>
-                        </div>
-                        
-                        <!-- Price & Add to Cart -->
-                        <div class="product-price-container mt-auto">
-                            <div>
-                                <span class="product-price">₹{{ product.price }}</span>
-                                {% if product.discount > 0 %}
-                                    <!-- Calculate original price roughly for display purposes -->
-                                    <span class="product-original-price ms-2 d-none d-sm-inline">₹<script>document.write(Math.round({{ product.price }} / (1 - {{ product.discount }}/100)))</script></span>
-                                {% endif %}
-                            </div>
-                            
-                            <form method="POST" action="{% url 'cart:add_to_cart' product.id %}" class="ms-auto">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-primary rounded-circle" style="width: 40px; height: 40px; padding: 0;" title="Add to Cart">
-                                    <i class="fas fa-cart-plus"></i>
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4" id="product-grid">
+            {% include 'products/partials/product_cards.html' with products=products %}
+        </div>
+
+        <!-- Infinite Scroll Sentinel -->
+        <div id="scroll-sentinel" style="height: 1px; margin-top: 2rem;"></div>
+
+        <!-- Loading Spinner -->
+        <div id="scroll-loader" class="text-center py-4" style="display: none;">
+            <div class="d-inline-flex align-items-center gap-3 px-4 py-2 bg-white rounded-pill shadow-sm border">
+                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                <span class="text-muted fw-medium" style="font-size: 0.9rem;">Loading more products...</span>
             </div>
-            {% empty %}
-            <div class="col-12">
-                <div class="text-center py-5 bg-white rounded shadow-sm border">
-                    <i class="fas fa-box-open fs-1 text-muted mb-3"></i>
-                    <h4>No products found</h4>
-                    <p class="text-muted">Check back later for new arrivals.</p>
-                </div>
-            </div>
-            {% endfor %}
+        </div>
+
+        <!-- End of Products Message -->
+        <div id="scroll-end" class="text-center py-4" style="display: none;">
+            <span class="text-muted small"><i class="fas fa-check-circle text-success me-2"></i>You've seen all products!</span>
         </div>
     </div>
 
-    {% if page_obj.has_other_pages %}
-    <div class="container mb-5">
-        <nav aria-label="Products pagination">
-            <ul class="pagination justify-content-center gap-1">
-                {% if page_obj.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link rounded-3 border-0 shadow-sm px-3" href="?page={{ page_obj.previous_page_number }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">
-                            <i class="fas fa-chevron-left"></i>
-                        </a>
-                    </li>
-                {% endif %}
+    <!-- Infinite Scroll JS for Home Page -->
+    <script>
+    (function() {
+        const grid    = document.getElementById('product-grid');
+        const sentinel = document.getElementById('scroll-sentinel');
+        const loader  = document.getElementById('scroll-loader');
+        const endMsg  = document.getElementById('scroll-end');
 
-                {% for num in page_obj.paginator.page_range %}
-                    {% if page_obj.number == num %}
-                        <li class="page-item active">
-                            <span class="page-link rounded-3 border-0 shadow-sm px-3">{{ num }}</span>
-                        </li>
-                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                        <li class="page-item">
-                            <a class="page-link rounded-3 border-0 shadow-sm px-3" href="?page={{ num }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">{{ num }}</a>
-                        </li>
-                    {% endif %}
-                {% endfor %}
+        {% if page_obj.has_next %}
+        let nextPage = {{ page_obj.next_page_number }};
+        {% else %}
+        let nextPage = null;
+        {% endif %}
+        const categorySlug = "{{ request.GET.category|default:'' }}";
+        let isFetching = false;
 
-                {% if page_obj.has_next %}
-                    <li class="page-item">
-                        <a class="page-link rounded-3 border-0 shadow-sm px-3" href="?page={{ page_obj.next_page_number }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-                    </li>
-                {% endif %}
-            </ul>
-            <p class="text-center text-muted small mt-2">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</p>
-        </nav>
-    </div>
-    {% endif %}
+        if (!nextPage) {
+            endMsg.style.display = 'block';
+        }
+
+        const observer = new IntersectionObserver(function(entries) {
+            if (entries[0].isIntersecting && nextPage && !isFetching) {
+                isFetching = true;
+                loader.style.display = 'block';
+
+                let url = `/ajax/load-more/?page=${nextPage}`;
+                if (categorySlug) url += `&category=${categorySlug}`;
+
+                fetch(url)
+                    .then(res => res.json())
+                    .then(data => {
+                        grid.insertAdjacentHTML('beforeend', data.html);
+                        if (data.has_next) {
+                            nextPage = data.next_page;
+                        } else {
+                            nextPage = null;
+                            observer.disconnect();
+                            endMsg.style.display = 'block';
+                        }
+                        loader.style.display = 'none';
+                        isFetching = false;
+                    })
+                    .catch(() => {
+                        loader.style.display = 'none';
+                        isFetching = false;
+                    });
+            }
+        }, { rootMargin: '200px' });
+
+        if (sentinel) observer.observe(sentinel);
+    })();
+    </script>
 
     <!-- SECTION 5 — App & Newsletter -->
     <div class="container mb-5 mt-5">

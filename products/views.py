@@ -7,6 +7,8 @@ from .forms import ReviewForm
 from django.db.models import Avg
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.http import JsonResponse
+from django.template.loader import render_to_string
 
 
 # Create your views here.
@@ -149,4 +151,69 @@ def submit_review(request, slug):
     return redirect('products:product_detail', slug=slug)
 
 
+def load_more_products(request):
+    """AJAX endpoint for infinite scroll on the home page."""
+    page_number = request.GET.get('page', 1)
+    category_slug = request.GET.get('category', '')
+
+    products = Product.objects.filter(is_active=True)
+    if category_slug:
+        category = Category.objects.filter(slug=category_slug).first()
+        if category:
+            products = products.filter(category=category)
+
+    paginator = Paginator(products, 12)
+    page_obj = paginator.get_page(page_number)
+
+    html = render_to_string('products/partials/product_cards.html', {
+        'products': page_obj,
+    }, request=request)
+
+    return JsonResponse({
+        'html': html,
+        'has_next': page_obj.has_next(),
+        'next_page': page_obj.next_page_number() if page_obj.has_next() else None,
+    })
+
+
+def search_autocomplete(request):
+    """AJAX endpoint for live search autocomplete dropdown."""
+    query = request.GET.get('q', '').strip()
+    results = []
+
+    if len(query) >= 2:
+        products = Product.objects.filter(
+            Q(name__icontains=query) | Q(description__icontains=query),
+            is_active=True
+        ).select_related('category')[:6]
+
+        for p in products:
+            results.append({
+                'name': p.name,
+                'price': str(p.price),
+                'category': p.category.name,
+                'url': f'/products/{p.slug}/',
+                'image': p.image.url if p.image else None,
+                'discount': p.discount,
+            })
+
+    return JsonResponse({'results': results, 'query': query})
+def load_more_category_products(request, slug):
+    """AJAX endpoint for infinite scroll on the category page."""
+    page_number = request.GET.get('page', 1)
+    category = get_object_or_404(Category, slug=slug)
+    products = Product.objects.filter(category=category, is_active=True)
+
+    paginator = Paginator(products, 12)
+    page_obj = paginator.get_page(page_number)
+
+    html = render_to_string('products/partials/product_cards.html', {
+        'products': page_obj,
+    }, request=request)
+
+    return JsonResponse({
+        'html': html,
+        'has_next': page_obj.has_next(),
+        'next_page': page_obj.next_page_number() if page_obj.has_next() else None,
+    })
 

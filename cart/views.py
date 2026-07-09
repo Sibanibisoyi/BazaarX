@@ -4,6 +4,7 @@ from django.contrib import messages
 from .models import Cart, CartItem
 from products.models import Product, ProductVariant
 from coupons.models import Coupon
+from .models import SavedItem
 
 # Create your views here.
 @login_required
@@ -37,6 +38,7 @@ def add_to_cart(request, product_id):
 def cart_detail(request):
     cart, created = Cart.objects.get_or_create(user=request.user)
     items = cart.cartitem_set.all()
+    saved_items = SavedItem.objects.filter(user=request.user)
     total = sum(item.effective_price() * item.quantity for item in items)
     coupon_id = request.session.get('coupon_id')
     if coupon_id:
@@ -60,6 +62,7 @@ def cart_detail(request):
         'coupon': coupon,
         'discount_amount': discount_amount,
         'discounted_total': discounted_total,
+        'saved_items': saved_items,
     })
 
 @login_required
@@ -81,3 +84,36 @@ def update_cart_view(request, item_id):
     return redirect('cart:cart_detail')
 
 
+
+
+@login_required
+def save_for_later(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    cart = Cart.objects.get(user=request.user)
+    CartItem.objects.filter(cart=cart, product=product).delete()
+    SavedItem.objects.get_or_create(user=request.user, product=product)
+    messages.success(request, f'{product.name} saved for later.')
+    return redirect('cart:cart_detail')
+
+@login_required
+def move_to_cart(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    cart, _ = Cart.objects.get_or_create(user=request.user)
+    CartItem.objects.get_or_create(cart=cart, product=product, defaults={'quantity': 1})
+    SavedItem.objects.filter(user=request.user, product=product).delete()
+    messages.success(request, f'{product.name} moved to cart.')
+    return redirect('cart:cart_detail')
+
+@login_required
+def remove_saved_item(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    SavedItem.objects.filter(user=request.user, product=product).delete()
+    messages.success(request, 'Item removed.')
+    return redirect(request.META.get('HTTP_REFERER', 'cart:saved_for_later_list'))
+
+@login_required
+def saved_for_later_list(request):
+    saved_items = SavedItem.objects.filter(user=request.user)
+    return render(request, 'cart/saved_for_later.html', {
+        'saved_items': saved_items,
+    })

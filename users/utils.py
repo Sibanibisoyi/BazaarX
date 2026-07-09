@@ -45,10 +45,15 @@ def redeem_points(user, points_to_redeem):
 def generate_otp():
     return str(random.randint(100000, 999999))
 
-def send_otp_email(email, otp):
-    send_mail(
-        subject='BazaarX - Your OTP Code',
-        message=f'Your OTP is: {otp}\n\nThis OTP is valid for 10 minutes.',
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[email],
-    )
+def send_otp(identifier, otp):
+    if '@' in identifier:
+        send_mail(
+            subject='BazaarX - Your OTP Code',
+            message=f'Your OTP is: {otp}\n\nThis OTP is valid for 10 minutes.',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[identifier],
+        )
+    else:
+        print(f"\n=== SIMULATED SMS TO {identifier} ===")
+        print(f"Your BazaarX OTP is: {otp}")
+        print(f"======================================\n")

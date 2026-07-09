@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load socialaccount %}
+
+{% block title %}Sign In / Register | BazaarX{% endblock %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-12 col-md-8 col-lg-5">
+        <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold mb-2">Welcome to BazaarX</h2>
+                    <p class="text-muted">Enter your email or mobile number to continue.</p>
+                </div>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="mb-4 form-floating">
+                        {{ form.email_or_phone }}
+                        <label for="{{ form.email_or_phone.id_for_label }}"><i class="fas fa-user-circle me-1"></i> Email or Mobile Number</label>
+                        {% if form.email_or_phone.errors %}
+                            <div class="text-danger small mt-1">{{ form.email_or_phone.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold fs-5 shadow-sm mt-2">
+                        Continue <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                    
+                </form>
+
+                <div class="d-flex align-items-center my-4">
+                    <hr class="flex-grow-1">
+                    <span class="mx-3 text-muted small fw-bold text-uppercase">or</span>
+                    <hr class="flex-grow-1">
+                </div>
+
+                <form action="{% provider_login_url 'google' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-dark w-100 py-3 rounded-pill fw-bold fs-5 shadow-sm d-flex align-items-center justify-content-center gap-2">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style="width: 24px; height: 24px;">
+                        Continue with Google
+                    </button>
+                </form>
+
+                <div class="text-center mt-4 pt-3 border-top">
+                    <p class="small text-muted mb-0">By continuing, you agree to BazaarX's <a href="#" class="text-decoration-none">Conditions of Use</a> and <a href="#" class="text-decoration-none">Privacy Notice</a>.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
