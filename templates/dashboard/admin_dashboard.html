@@ -166,7 +166,7 @@
                                         <a href="{% url 'returns:approve_return' return.id %}" class="btn btn-sm btn-success rounded-circle me-1" title="Approve" style="width: 32px; height: 32px; padding: 0; line-height: 32px;">
                                             <i class="fas fa-check"></i>
                                         </a>
-                                        <a href="{% url 'dashboard:reject_return' return.id %}" class="btn btn-sm btn-outline-danger rounded-circle" title="Reject" style="width: 32px; height: 32px; padding: 0; line-height: 32px;">
+                                        <a href="{% url 'returns:reject_return' return.id %}" class="btn btn-sm btn-outline-danger rounded-circle" title="Reject" style="width: 32px; height: 32px; padding: 0; line-height: 32px;">
                                             <i class="fas fa-times"></i>
                                         </a>
                                     </td>
@@ -261,25 +261,22 @@
         Chart.defaults.color = '#6c757d';
         
         new Chart(ctx, {
-            type: 'bar',
+            type: 'line',
             data: {
-                labels: ['Orders', 'Users', 'Products'],
+                labels: {{ chart_labels|safe }},
                 datasets: [{
-                    label: 'BazaarX Metrics',
-                    data: [{{ total_orders }}, {{ total_users }}, {{ total_products }}],
-                    backgroundColor: [
-                        'rgba(13, 110, 253, 0.8)',   // Primary
-                        'rgba(25, 135, 84, 0.8)',    // Success
-                        'rgba(255, 193, 7, 0.8)'     // Warning
-                    ],
-                    borderColor: [
-                        'rgb(13, 110, 253)',
-                        'rgb(25, 135, 84)',
-                        'rgb(255, 193, 7)'
-                    ],
-                    borderWidth: 1,
-                    borderRadius: 6,
-                    barPercentage: 0.6
+                    label: 'Orders',
+                    data: {{ chart_data|safe }},
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    borderColor: 'rgb(13, 110, 253)',
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgb(13, 110, 253)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    fill: true,
+                    tension: 0.4
                 }]
             },
             options: {
@@ -304,6 +301,9 @@
                         grid: {
                             color: 'rgba(0, 0, 0, 0.05)',
                             drawBorder: false
+                        },
+                        ticks: {
+                            precision: 0
                         }
                     },
                     x: {

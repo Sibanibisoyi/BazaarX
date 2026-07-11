@@ -6,13 +6,16 @@ from orders.models import Order
 from products.models import Product, ProductImage
 from seller.models import Seller
 from returns.models import ReturnRequest
-from django.db.models import Sum
+from django.db.models import Sum, Count
+from django.db.models.functions import TruncDate
+from datetime import timedelta
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from products.models import Product, Category
 from seller.forms import ProductForm
 from .forms import CategoryForm
 from django.core.paginator import Paginator
+from django.utils import timezone
 
 
 # ─── Reusable staff guard decorator ──────────────────────────────────────────
@@ -42,6 +45,17 @@ def admin_dashboard(request):
     pending_sellers = Seller.objects.filter(is_approved=False)
     pending_returns = ReturnRequest.objects.filter(status='pending')
 
+    # Line chart data: Orders per day for the last 30 days
+    thirty_days_ago = timezone.now() - timedelta(days=30)
+    daily_orders = Order.objects.filter(created_at__gte=thirty_days_ago) \
+        .annotate(date=TruncDate('created_at')) \
+        .values('date') \
+        .annotate(count=Count('id')) \
+        .order_by('date')
+
+    chart_labels = [entry['date'].strftime('%b %d') if entry['date'] else '' for entry in daily_orders]
+    chart_data = [entry['count'] for entry in daily_orders]
+
     return render(request, 'dashboard/admin_dashboard.html', {
         'total_orders': total_orders,
         'total_users': total_users,
@@ -50,6 +64,8 @@ def admin_dashboard(request):
         'recent_orders': recent_orders,
         'pending_sellers': pending_sellers,
         'pending_returns': pending_returns,
+        'chart_labels': chart_labels,
+        'chart_data': chart_data,
     })
 
 
@@ -59,15 +75,6 @@ def approve_seller(request, seller_id):
     seller.is_approved = True
     seller.save()
     messages.success(request, 'Seller approved successfully.')
-    return redirect('dashboard:admin_dashboard')
-
-
-@staff_required
-def reject_return(request, return_id):
-    return_request = get_object_or_404(ReturnRequest, id=return_id)
-    return_request.status = 'rejected'
-    return_request.save()
-    messages.success(request, 'Return request rejected.')
     return redirect('dashboard:admin_dashboard')
 
 
@@ -185,8 +192,30 @@ def admin_update_status(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     if request.method == 'POST':
         status = request.POST.get('status')
+        old_status = order.status
         order.status = status
+        # Auto-stamp delivered_at when status is set to 'delivered'
+        if status == 'delivered' and old_status != 'delivered':
+            order.delivered_at = timezone.now()
         order.save()
+        
+        # Send notification email if status changed
+        if status != old_status:
+            from utils.email_utils import (
+                send_order_confirmation_email,
+                send_order_shipped_email,
+                send_order_delivered_email,
+                send_order_cancelled_email,
+            )
+            if status == 'confirmed':
+                send_order_confirmation_email(order)
+            elif status == 'shipped':
+                send_order_shipped_email(order)
+            elif status == 'delivered':
+                send_order_delivered_email(order)
+            elif status == 'cancelled':
+                send_order_cancelled_email(order)
+
         messages.success(request, 'Order status updated.')
     return redirect('dashboard:admin_order_detail', order_id=order_id)
 

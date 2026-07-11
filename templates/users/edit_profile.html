@@ -7,9 +7,38 @@
     <div class="row justify-content-center">
         <div class="col-lg-6">
             <div class="card border-0 shadow-sm rounded-3 p-4">
-                <h3 class="fw-bold mb-4">Edit Profile</h3>
-                <form method="POST">
+                <h3 class="fw-bold mb-4"><i class="fas fa-user-edit text-primary me-2"></i>Edit Profile</h3>
+
+                <form method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
+
+                    <!-- Profile Picture Upload -->
+                    <div class="mb-4 text-center">
+                        {% if request.user.profile_picture %}
+                            <img src="{{ request.user.profile_picture.url }}" id="avatarPreview"
+                                 class="rounded-circle border shadow mb-3"
+                                 style="width: 110px; height: 110px; object-fit: cover;">
+                        {% else %}
+                            <div id="avatarInitial" class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center fw-bold fs-1 border shadow mb-3"
+                                 style="width: 110px; height: 110px;">
+                                {{ request.user.username|first|upper }}
+                            </div>
+                            <img src="" id="avatarPreview" class="rounded-circle border shadow mb-3 d-none"
+                                 style="width: 110px; height: 110px; object-fit: cover;">
+                        {% endif %}
+
+                        <div>
+                            <label for="id_profile_picture" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-camera me-1"></i> Change Photo
+                            </label>
+                            {{ pic_form.profile_picture }}
+                        </div>
+                        <small class="text-muted d-block mt-1">JPG, PNG or GIF · Max 5 MB</small>
+                    </div>
+
+                    <hr class="mb-4">
+
+                    <!-- Profile Fields -->
                     {% for field in form %}
                         <div class="mb-3">
                             <label class="form-label fw-semibold">{{ field.label }}</label>
@@ -19,8 +48,11 @@
                             {% endif %}
                         </div>
                     {% endfor %}
-                    <div class="d-flex gap-2 mt-3">
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fas fa-save me-1"></i> Save Changes
+                        </button>
                         <a href="{% url 'users:profile' %}" class="btn btn-outline-secondary">Cancel</a>
                     </div>
                 </form>
@@ -28,4 +60,24 @@
         </div>
     </div>
 </div>
+
+<script>
+/* Live avatar preview */
+document.getElementById('id_profile_picture').addEventListener('change', function () {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        const preview = document.getElementById('avatarPreview');
+        const initial = document.getElementById('avatarInitial');
+        preview.src = e.target.result;
+        preview.classList.remove('d-none');
+        if (initial) initial.classList.add('d-none');
+    };
+    reader.readAsDataURL(file);
+});
+
+/* Hide the default file input — replaced by the styled label button */
+document.getElementById('id_profile_picture').style.display = 'none';
+</script>
 {% endblock %}

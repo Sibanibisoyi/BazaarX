@@ -1,34 +1,118 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Return Request — Order #{{ order.id }} | BazaarX{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h4>Raise Return Request</h4>
-                <small>Order #{{ order.id }}</small>
+<div class="container mt-5 mb-5" style="max-width: 640px;">
+    <div class="bg-white rounded-4 shadow border overflow-hidden">
+
+        <!-- Header -->
+        <div class="p-4 border-bottom text-center" style="background: linear-gradient(135deg, #fffbeb, #fff7e6);">
+            <span class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                  style="width: 72px; height: 72px; background: rgba(245,158,11,0.12);">
+                <i class="fas fa-undo-alt text-warning" style="font-size: 2rem;"></i>
+            </span>
+            <h4 class="fw-bold text-dark mb-1">Request a Return</h4>
+            <p class="text-muted small mb-0">Order #{{ order.id }} &mdash; Placed {{ order.created_at|date:"d M Y" }}</p>
+        </div>
+
+        <div class="p-4">
+
+            <!-- Return Window Alert -->
+            {% if return_deadline %}
+            <div class="d-flex align-items-start gap-3 rounded-3 p-3 mb-4"
+                 style="background: #f0fdf4; border: 1px solid #bbf7d0;">
+                <i class="fas fa-calendar-check text-success mt-1" style="font-size: 1.1rem;"></i>
+                <div>
+                    <p class="fw-semibold text-success mb-1" style="font-size: 0.9rem;">Return window is open</p>
+                    <p class="text-muted mb-0" style="font-size: 0.83rem;">
+                        You can return this order until <strong class="text-dark">{{ return_deadline|date:"d M Y" }}</strong>
+                        (10 days from delivery).
+                    </p>
+                </div>
             </div>
-            <div class="card-body">
-                <form method="POST">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label>Reason for Return</label>
-                        <textarea name="reason"
-                                  class="form-control"
-                                  rows="4"
-                                  placeholder="Explain why you want to return">
-                        </textarea>
-                    </div>
-                    <button type="submit" class="btn btn-warning w-100">
-                        Submit Return Request
+            {% endif %}
+
+            <!-- Order Summary -->
+            <div class="bg-light rounded-3 p-3 mb-4">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted small">Order Amount</span>
+                    <span class="fw-bold text-danger">₹{{ order.total_price }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted small">Payment Method</span>
+                    <span class="fw-semibold small">
+                        {% if order.payment_method == 'cod' %}Cash on Delivery{% else %}Online (Razorpay){% endif %}
+                    </span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted small">Refund Mode</span>
+                    <span class="fw-semibold small text-success">
+                        {% if order.payment_method == 'razorpay' %}
+                            <i class="fas fa-credit-card me-1"></i>Original Payment Method
+                        {% else %}
+                            <i class="fas fa-university me-1"></i>Bank Transfer
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Return Reason Form -->
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label class="form-label fw-semibold" for="returnReason">
+                        <i class="fas fa-comment-alt me-1 text-muted"></i>Reason for Return
+                        <span class="text-danger">*</span>
+                    </label>
+                    <select id="returnReasonSelect" class="form-select mb-2" onchange="fillReason(this.value)">
+                        <option value="">— Select a common reason —</option>
+                        <option value="Received damaged or defective product">Received damaged or defective product</option>
+                        <option value="Wrong item delivered">Wrong item delivered</option>
+                        <option value="Product not as described">Product not as described</option>
+                        <option value="Changed my mind / no longer needed">Changed my mind / no longer needed</option>
+                        <option value="Size or fit issue">Size or fit issue</option>
+                        <option value="Poor quality">Poor quality</option>
+                        <option value="Other">Other (please describe below)</option>
+                    </select>
+                    <textarea id="returnReason" name="reason" class="form-control" rows="4"
+                              placeholder="Describe your reason in detail…"
+                              style="resize: vertical; font-size: 0.9rem;" required></textarea>
+                </div>
+
+                <div class="alert alert-info border-0 small mb-4" style="background:#eff6ff;">
+                    <i class="fas fa-info-circle me-2 text-primary"></i>
+                    Once submitted, our team will review your request within <strong>2–3 business days</strong>.
+                    {% if order.payment_method == 'razorpay' %}
+                    Approved refunds are credited within <strong>5–7 business days</strong>.
+                    {% endif %}
+                </div>
+
+                <div class="d-flex gap-3">
+                    <a href="{% url 'orders:order_detail' order.id %}"
+                       class="btn btn-outline-secondary fw-semibold flex-grow-1">
+                        <i class="fas fa-arrow-left me-1"></i> Go Back
+                    </a>
+                    <button type="submit" class="btn btn-warning fw-bold flex-grow-1 text-dark shadow-sm">
+                        <i class="fas fa-paper-plane me-1"></i> Submit Return Request
                     </button>
-                </form>
-                <a href="{% url 'orders:my_orders' %}"
-                   class="btn btn-outline-secondary w-100 mt-2">
-                    Cancel
-                </a>
-            </div>
+                </div>
+            </form>
+
         </div>
     </div>
 </div>
+
+<script>
+function fillReason(val) {
+    var ta = document.getElementById('returnReason');
+    if (val && val !== 'Other') {
+        ta.value = val;
+    } else if (val === 'Other') {
+        ta.value = '';
+        ta.focus();
+    }
+}
+</script>
 {% endblock %}

@@ -7,7 +7,7 @@ from users.models import Address
 import razorpay
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
-from utils.email_utils import send_order_confirmation_email
+from utils.email_utils import send_order_confirmation_email, send_order_cancelled_email
 from django.template.loader import render_to_string
 from django.http import HttpResponse
 from reportlab.lib.pagesizes import letter
@@ -49,13 +49,9 @@ def checkout(request):
     coupon_id = request.session.get('coupon_id')
     if coupon_id:
         try:
-            coupon = Coupon.objects.get(
-                id=coupon_id, is_active=True,
-                valid_from__lte=timezone.now(),
-                valid_to__gte=timezone.now()
-            )
-            # Re-check the user hasn't already used it
-            if request.user not in coupon.used_by.all():
+            coupon = Coupon.objects.get(id=coupon_id)
+            is_valid, _ = coupon.is_valid_for_user(request.user)
+            if is_valid:
                 coupon_discount = (subtotal * coupon.discount) / 100
             else:
                 coupon = None
@@ -95,17 +91,15 @@ def place_order(request):
         coupon_id = request.session.get('coupon_id')
         if coupon_id:
             try:
-                coupon = Coupon.objects.get(
-                    id=coupon_id, is_active=True,
-                    valid_from__lte=timezone.now(),
-                    valid_to__gte=timezone.now()
-                )
-                if request.user not in coupon.used_by.all():
+                coupon = Coupon.objects.get(id=coupon_id)
+                is_valid, _ = coupon.is_valid_for_user(request.user)
+                if is_valid:
                     coupon_discount = (subtotal * coupon.discount) / 100
                 else:
                     coupon = None
+                    request.session['coupon_id'] = None
             except Coupon.DoesNotExist:
-                pass
+                request.session['coupon_id'] = None
 
         total = subtotal - points_discount - coupon_discount
         if total < 0:
@@ -136,11 +130,12 @@ def place_order(request):
 
         # Mark coupon as used and clear session
         if coupon:
-            coupon.used_by.add(request.user)
+            coupon.mark_used(request.user)
             request.session['coupon_id'] = None
 
         if payment_method == 'cod':
             award_points(request.user, order.total_price, order.id)
+            send_order_confirmation_email(order)
             messages.success(request, 'Order placed successfully! Pay on delivery.')
             return redirect('orders:order_confirmation', order_id=order.id)
         else:
@@ -154,11 +149,56 @@ def order_confirmation(request, order_id):
 
 @login_required
 def my_orders(request):
+    status_filter = request.GET.get('status', '')
     orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    if status_filter and status_filter in ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled']:
+        orders = orders.filter(status=status_filter)
+
     paginator = Paginator(orders, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    return render(request, 'orders/my_orders.html', {'orders': page_obj, 'page_obj': page_obj})
+    filter_tabs = [
+        ('All', ''),
+        ('Pending', 'pending'),
+        ('Confirmed', 'confirmed'),
+        ('Shipped', 'shipped'),
+        ('Delivered', 'delivered'),
+        ('Cancelled', 'cancelled'),
+    ]
+    return render(request, 'orders/my_orders.html', {
+        'orders': page_obj,
+        'page_obj': page_obj,
+        'status_filter': status_filter,
+        'filter_tabs': filter_tabs,
+    })
+
+
+@login_required
+def buy_again(request, order_id):
+    """Re-add all items from a delivered/cancelled order back into the cart."""
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    cart, _ = Cart.objects.get_or_create(user=request.user)
+    added = 0
+    for item in order.orderitem_set.all():
+        product = item.product
+        variant = item.variant
+        stock_available = variant.stock if variant else product.stock
+
+        if product.is_active and stock_available > 0:
+            cart_item, created = CartItem.objects.get_or_create(
+                cart=cart, product=product, variant=variant,
+                defaults={'quantity': 1}
+            )
+            if not created:
+                if cart_item.quantity < stock_available:
+                    cart_item.quantity += 1
+                    cart_item.save()
+            added += 1
+    if added:
+        messages.success(request, f'{added} item(s) added to your cart!')
+    else:
+        messages.warning(request, 'No items from this order are currently in stock.')
+    return redirect('cart:cart_detail')
 
 @login_required
 def order_detail(request, order_id):
@@ -178,13 +218,24 @@ def cancel_order(request, order_id):
         return redirect('orders:order_detail', order_id=order.id)
 
     if request.method == 'POST':
+        reason = request.POST.get('reason', '').strip()
+        if not reason:
+            messages.error(request, 'Please provide a reason for cancellation.')
+            return redirect('orders:cancel_order', order_id=order.id)
+
         # Restock the products
         for item in order.orderitem_set.all():
-            item.product.stock += item.quantity
-            item.product.save()
+            if item.variant:
+                item.variant.stock += item.quantity
+                item.variant.save()
+            else:
+                item.product.stock += item.quantity
+                item.product.save()
 
         order.status = 'cancelled'
+        order.cancellation_reason = reason
         order.save()
+        send_order_cancelled_email(order)
         messages.success(request, f'Order #{order.id} has been cancelled successfully.')
         return redirect('orders:my_orders')
 
@@ -228,7 +279,10 @@ def payment_success(request):
             # Award loyalty points after successful payment
             order = Order.objects.filter(user=request.user).order_by('-created_at').first()
             if order:
+                order.status = 'confirmed'
+                order.save()
                 award_points(request.user, order.total_price, order.id)
+                send_order_confirmation_email(order)
 
             messages.success(request, 'Payment successful')
             return redirect('orders:my_orders')

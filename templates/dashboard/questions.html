@@ -1,0 +1,30 @@
+{% extends "dashboard/admin_base.html" %} {% block content %}
+<div class="container mt-4">
+  <h3 class="fw-bold mb-4">Pending Questions</h3>
+  {% for q in questions %}
+  <div class="card mb-3 shadow-sm">
+    <div class="card-body">
+      <h6 class="fw-bold">{{ q.product.name }}</h6>
+      <p class="text-muted mb-2"><strong>Q:</strong> {{ q.question }}</p>
+      <p class="small text-muted">
+        Asked by {{ q.user.username }} · {{ q.created_at|date:"M d, Y" }}
+      </p>
+      <form method="POST" action="{% url 'products:answer_question' q.id %}">
+        {% csrf_token %}
+        <textarea
+          name="answer"
+          class="form-control mb-2"
+          rows="2"
+          placeholder="Type your answer..."
+        ></textarea>
+        <button type="submit" class="btn btn-success btn-sm">
+          Submit Answer
+        </button>
+      </form>
+    </div>
+  </div>
+  {% empty %}
+  <p class="text-muted">No pending questions.</p>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
             thumb.addEventListener('click', function() {
                 const newSrc = this.getAttribute('src');
                 mainImage.setAttribute('src', newSrc);
-                
+
                 // Active state
                 thumbnails.forEach(t => t.classList.remove('border-primary', 'border-2'));
                 this.classList.add('border-primary', 'border-2');
@@ -51,21 +51,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         backToTopBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     }
 
     // 4. Quantity Stepper Enhancements
     const qtyInputs = document.querySelectorAll('input[name="quantity"]');
     qtyInputs.forEach(input => {
-        // Only trigger update on form submit or blur
         input.addEventListener('change', function() {
-            if (this.value < 1) {
-                this.value = 1;
-            }
+            if (this.value < 1) this.value = 1;
         });
     });
 
@@ -77,4 +71,115 @@ document.addEventListener('DOMContentLoaded', function() {
             bsAlert.close();
         }, 5000);
     });
+
+    // ─────────────────────────────────────────────────────────────
+    // 6. AJAX Add to Cart — Amazon-style toast
+    //    Uses EVENT DELEGATION on document so it catches every form
+    //    whether present at load time or added later (infinite scroll)
+    // ─────────────────────────────────────────────────────────────
+    let cartToastTimer = null;
+
+    function showCartToast(status, message) {
+        var toast  = document.getElementById('cartToast');
+        var icon   = document.getElementById('cartToastIcon');
+        var title  = document.getElementById('cartToastTitle');
+        var msgEl  = document.getElementById('cartToastMsg');
+        var header = document.getElementById('cartToastHeader');
+        if (!toast) return;
+
+        if (status === 'success') {
+            icon.className          = 'fas fa-check-circle';
+            icon.style.color        = '#00c851';
+            title.textContent       = 'Added to Cart';
+            header.style.background = '#232f3e';
+        } else if (status === 'warning') {
+            icon.className          = 'fas fa-exclamation-circle';
+            icon.style.color        = '#f0c14b';
+            title.textContent       = 'Notice';
+            header.style.background = '#7b5e00';
+        } else {
+            icon.className          = 'fas fa-times-circle';
+            icon.style.color        = '#ff4444';
+            title.textContent       = 'Error';
+            header.style.background = '#c0392b';
+        }
+
+        msgEl.textContent = message;
+
+        // Restart slide-in animation
+        toast.style.display = 'none';
+        void toast.offsetWidth;
+        toast.style.display = 'block';
+
+        if (cartToastTimer) clearTimeout(cartToastTimer);
+        cartToastTimer = setTimeout(function() {
+            toast.style.display = 'none';
+        }, 4000);
+    }
+
+    function updateCartBadge(count) {
+        var badge = document.getElementById('cartItemCount');
+        if (!badge) return;
+        badge.textContent = count;
+        badge.style.display = count > 0 ? 'inline-flex' : 'none';
+    }
+
+    // Single delegated listener — catches ALL cart forms including
+    // those inside dynamically loaded content (infinite scroll etc.)
+    document.addEventListener('submit', function(e) {
+        var form = e.target;
+        if (!form || !form.action) return;
+
+        // Only intercept Add-to-Cart forms
+        if (form.action.indexOf('/cart/add/') === -1) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        var formData = new FormData(form);
+        var btn = form.querySelector('button[type="submit"], input[type="submit"]');
+        var origHTML = null;
+
+        // Show spinner on the button
+        if (btn) {
+            origHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            setTimeout(function() {
+                btn.disabled  = false;
+                btn.innerHTML = origHTML;
+            }, 1800);
+        }
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+            },
+            body: formData,
+        })
+        .then(function(res) {
+            var ct = res.headers.get('content-type') || '';
+            if (!ct.includes('application/json')) {
+                // Not JSON — likely a redirect to login page
+                throw new Error('not-json');
+            }
+            return res.json();
+        })
+        .then(function(data) {
+            showCartToast(data.status, data.message);
+            if (typeof data.cart_count !== 'undefined') {
+                updateCartBadge(data.cart_count);
+            }
+        })
+        .catch(function(err) {
+            if (err.message === 'not-json') {
+                window.location.href = '/users/login/?next=' + encodeURIComponent(form.action);
+            } else {
+                showCartToast('error', 'Could not add item. Please try again.');
+            }
+        });
+    });
+
 });

@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from .models import Address
-from .forms import AddressForm, UserProfileForm, AuthForm
+from .forms import AddressForm, UserProfileForm, AuthForm, ProfilePictureForm
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import UserProfile
@@ -116,13 +116,16 @@ def edit_profile(request):
     profile, created = UserProfile.objects.get_or_create(user=request.user)
     if request.method == 'POST':
         form = UserProfileForm(request.POST, instance=profile)
-        if form.is_valid():
+        pic_form = ProfilePictureForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid() and pic_form.is_valid():
             form.save()
+            pic_form.save()
             messages.success(request, 'Profile updated successfully')
             return redirect('users:profile')
     else:
         form = UserProfileForm(instance=profile)
-    return render(request, 'users/edit_profile.html', {'form': form})
+        pic_form = ProfilePictureForm(instance=request.user)
+    return render(request, 'users/edit_profile.html', {'form': form, 'pic_form': pic_form})
 
 
 

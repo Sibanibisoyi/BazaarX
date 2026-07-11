@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db.models import Sum, Count, F, Q
 from .models import Seller
 from .forms import SellerForm, ProductForm
 from products.models import Product, Category
@@ -28,10 +29,28 @@ def seller_register(request):
 def seller_dashboard(request):
     seller = get_object_or_404(Seller, user=request.user)
     products = Product.objects.filter(seller=request.user)
+
+    # Basic Analytics
+    order_items = OrderItem.objects.filter(product__seller=request.user, order__status__in=['confirmed', 'shipped', 'delivered'])
+    total_sales = order_items.count()
+    total_revenue = sum(item.price * item.quantity for item in order_items)
+
+    # Analytics per product for Chart.js
+    product_stats = products.annotate(
+        revenue=Sum(F('orderitem__price') * F('orderitem__quantity'), filter=Q(orderitem__order__status__in=['confirmed', 'shipped', 'delivered']))
+    )
+
+    product_names = [p.name[:20] for p in product_stats]
+    product_revenues = [float(p.revenue or 0) for p in product_stats]
+
     return render(request, 'seller/dashboard.html', {
-    'seller': seller,
-    'products': products,
-})
+        'seller': seller,
+        'products': products,
+        'total_revenue': total_revenue,
+        'total_sales': total_sales,
+        'product_names': product_names,
+        'product_revenues': product_revenues,
+    })
 
 @login_required
 def add_product(request):

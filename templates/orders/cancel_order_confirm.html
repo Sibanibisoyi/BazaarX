@@ -45,17 +45,54 @@
                 {% endif %}
             </div>
 
-            <div class="d-flex gap-3">
-                <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-outline-secondary w-50 fw-semibold">
-                    <i class="fas fa-arrow-left me-1"></i> Go Back
-                </a>
-                <form method="POST" action="{% url 'orders:cancel_order' order.id %}" class="w-50">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger w-100 fw-semibold">
-                        <i class="fas fa-times me-1"></i> Yes, Cancel Order
+            <form method="POST" action="{% url 'orders:cancel_order' order.id %}">
+                {% csrf_token %}
+
+                <div class="mb-4 text-start">
+                    <label class="form-label fw-semibold small" for="cancelReason">
+                        <i class="fas fa-question-circle me-1 text-muted"></i>Why are you cancelling?
+                        <span class="text-danger">*</span>
+                    </label>
+                    <select id="cancelReasonSelect" class="form-select mb-2 small" onchange="fillCancelReason(this.value)">
+                        <option value="">— Select a reason —</option>
+                        <option value="Order placed by mistake">Order placed by mistake</option>
+                        <option value="Found a better price elsewhere">Found a better price elsewhere</option>
+                        <option value="Delivery time is too long">Delivery time is too long</option>
+                        <option value="Changed my mind">Changed my mind</option>
+                        <option value="Need to change shipping address">Need to change shipping address</option>
+                        <option value="Need to change payment method">Need to change payment method</option>
+                        <option value="Other">Other (please describe below)</option>
+                    </select>
+                    <textarea id="cancelReason" name="reason" class="form-control small" rows="3"
+                              placeholder="Describe your reason..."
+                              style="resize: vertical;" required></textarea>
+                </div>
+
+                <div class="d-flex gap-3">
+                    <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-outline-secondary w-50 fw-semibold">
+                        <i class="fas fa-arrow-left me-1"></i> Go Back
+                    </a>
+                    <button type="submit" class="btn btn-danger w-50 fw-semibold">
+                        <i class="fas fa-times me-1"></i> Cancel Order
                     </button>
-                </form>
-            </div>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<script>
+function fillCancelReason(val) {
+    var ta = document.getElementById('cancelReason');
+    if (val && val !== 'Other') {
+        ta.value = val;
+    } else if (val === 'Other') {
+        ta.value = '';
+        ta.focus();
+    }
+}
+</script>
         </div>
 
     </div>

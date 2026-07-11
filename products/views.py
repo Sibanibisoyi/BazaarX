@@ -1,14 +1,17 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from .models import Product, Category
 from django.db.models import Q
-from .models import Review
 from .forms import ReviewForm
 from django.db.models import Avg
 from django.contrib.auth.decorators import login_required
+
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from .models import Product, Category, Review, ProductQuestion, ProductVariant
+import json
+
+
 
 
 # Create your views here.
@@ -51,6 +54,7 @@ def product_detail(request, slug):
     reviews = Review.objects.filter(product=product).order_by('-created_at')
     avg_rating = reviews.aggregate(Avg('rating'))['rating__avg']
     review_count = reviews.count()
+    questions = ProductQuestion.objects.filter(product=product).order_by('-created_at')
     user_has_reviewed = False
     in_wishlist = False
     if request.user.is_authenticated:
@@ -58,6 +62,22 @@ def product_detail(request, slug):
         from extras.models import Wishlist
         in_wishlist = Wishlist.objects.filter(user=request.user, product=product).exists()
     review_form = ReviewForm()
+
+    # Build variant data for JS size selector
+    variants_qs = product.productvariant_set.filter(name='Size').order_by('value')
+    # Keep defined size order
+    size_order = ['S', 'M', 'L', 'XL', 'XXL']
+    variants_sorted = sorted(variants_qs, key=lambda v: size_order.index(v.value) if v.value in size_order else 99)
+    variants_data = [
+        {
+            'id': v.id,
+            'name': v.name,
+            'value': v.value,
+            'stock': v.stock,
+            'price': str(v.effective_price()),
+        }
+        for v in variants_sorted
+    ]
 
     return render(request, 'products/product_detail.html', {
         'product': product,
@@ -69,6 +89,8 @@ def product_detail(request, slug):
         'user_has_reviewed': user_has_reviewed,
         'review_form': review_form,
         'in_wishlist': in_wishlist,
+        'questions': questions,
+        'variants_json': json.dumps(variants_data),
     })
 
 def search(request):
@@ -198,6 +220,8 @@ def search_autocomplete(request):
             })
 
     return JsonResponse({'results': results, 'query': query})
+
+
 def load_more_category_products(request, slug):
     """AJAX endpoint for infinite scroll on the category page."""
     page_number = request.GET.get('page', 1)
@@ -217,3 +241,41 @@ def load_more_category_products(request, slug):
         'next_page': page_obj.next_page_number() if page_obj.has_next() else None,
     })
 
+@login_required
+def ask_question(request, slug):
+    product = get_object_or_404(Product, slug=slug)
+    
+    if request.method == 'POST':
+        question_text = request.POST.get('question')
+        if question_text:
+            ProductQuestion.objects.create(
+                product = product,
+                user = request.user,
+                question = question_text,
+            )
+            messages.success(request, 'Your question has been submitted.')
+    return redirect('products:product_detail', slug=slug)
+
+
+
+@login_required
+def answer_question(request, question_id):
+    question = get_object_or_404(ProductQuestion, id=question_id)
+    if request.method == 'POST':
+        answer_text = request.POST.get('answer')
+        if answer_text:
+            question.answer = answer_text
+            question.is_answered = True
+            question.save()
+            messages.success(request, 'Answer submitted.')
+    return redirect('dashboard:admin_dashboard')
+
+
+
+
+@login_required
+def admin_questions(request):
+    if not request.user.is_staff:
+        return redirect('products:home')
+    questions = ProductQuestion.objects.filter(is_answered=False).order_by('-created_at')
+    return render(request, 'dashboard/questions.html', {'questions': questions})

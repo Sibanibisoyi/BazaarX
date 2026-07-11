@@ -85,6 +85,13 @@
                             <a href="{% url 'products:product_detail' item.product.slug %}" class="text-decoration-none text-dark fw-bold hover-primary d-block mb-1 line-clamp-2">
                                 {{ item.product.name }}
                             </a>
+                            <div class="d-flex flex-wrap gap-2 align-items-center mb-1">
+                                {% if item.variant %}
+                                <span class="badge" style="background:#fff3e0; color:#e65c00; border:1px solid #ffcc99;">
+                                    <i class="fas fa-ruler me-1"></i>{{ item.variant.name }}: {{ item.variant.value }}
+                                </span>
+                                {% endif %}
+                            </div>
                             <div class="d-flex flex-wrap gap-3 text-muted small">
                                 <span><span class="text-dark fw-medium">Seller:</span> {{ item.product.seller.username }}</span>
                                 <span><span class="text-dark fw-medium">Price:</span> ₹{{ item.price }}</span>
@@ -152,21 +159,56 @@
                 
                 <!-- Actions -->
                 {% if order.status == 'delivered' %}
-                <div class="bg-white rounded shadow-sm border p-4 text-center border-top border-warning border-3">
-                    <h6 class="fw-bold mb-2">Need to return an item?</h6>
-                    <p class="small text-muted mb-3">You can request a return within 10 days of delivery.</p>
-                    <a href="{% url 'returns:raise_return' order.id %}" class="btn btn-warning w-100 fw-bold shadow-sm text-dark">
-                        <i class="fas fa-undo me-2"></i> Raise Return Request
-                    </a>
-                </div>
+                    {% if order.is_returnable %}
+                    <div class="bg-white rounded shadow-sm border p-4 border-top border-warning border-3">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="fas fa-undo-alt text-warning fs-5"></i>
+                            <h6 class="fw-bold mb-0">Return This Order</h6>
+                        </div>
+                        {% if order.return_deadline %}
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <span class="badge bg-success" style="font-size:0.75rem;">
+                                <i class="fas fa-clock me-1"></i> Window open
+                            </span>
+                            <span class="text-muted small">Until <strong class="text-dark">{{ order.return_deadline|date:"d M Y" }}</strong></span>
+                        </div>
+                        {% endif %}
+                        <p class="small text-muted mb-3">Eligible for return within 10 days of delivery. Once approved, refund is processed in 5–7 business days.</p>
+                        <a href="{% url 'returns:raise_return' order.id %}" class="btn btn-warning w-100 fw-bold shadow-sm text-dark">
+                            <i class="fas fa-undo me-2"></i> Raise Return Request
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="bg-white rounded shadow-sm border p-4 border-top border-secondary border-3">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="fas fa-lock text-secondary fs-5"></i>
+                            <h6 class="fw-bold mb-0 text-secondary">Return Window Closed</h6>
+                        </div>
+                        {% if order.return_deadline %}
+                        <p class="small text-muted mb-0">
+                            The 10-day return window expired on <strong>{{ order.return_deadline|date:"d M Y" }}</strong>.
+                        </p>
+                        {% else %}
+                        <p class="small text-muted mb-0">Return window has expired for this order.</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
                 {% endif %}
 
                 {% if order.status == 'pending' or order.status == 'confirmed' %}
-                <div class="bg-white rounded shadow-sm border p-4 text-center border-top border-danger border-3">
-                    <h6 class="fw-bold mb-2 text-danger">Want to cancel this order?</h6>
-                    <p class="small text-muted mb-3">You can cancel this order as it hasn't been shipped yet.</p>
+                <div class="bg-white rounded shadow-sm border p-4 border-top border-danger border-3">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="fas fa-times-circle text-danger fs-5"></i>
+                        <h6 class="fw-bold mb-0 text-danger">Cancel Order</h6>
+                    </div>
+                    <p class="small text-muted mb-3">
+                        This order hasn't shipped yet. You can cancel it now.
+                        {% if order.payment_method == 'razorpay' %}
+                        Refund will be credited within <strong>5–7 business days</strong>.
+                        {% endif %}
+                    </p>
                     <a href="{% url 'orders:cancel_order' order.id %}" class="btn btn-outline-danger w-100 fw-bold shadow-sm">
-                        <i class="fas fa-times-circle me-2"></i> Cancel Order
+                        <i class="fas fa-times-circle me-2"></i> Cancel This Order
                     </a>
                 </div>
                 {% endif %}

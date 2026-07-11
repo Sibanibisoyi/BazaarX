@@ -9,19 +9,15 @@ def apply_coupon(request):
         code = request.POST.get('coupon_code')
 
         try:
-            coupon = Coupon.objects.get(
-                code=code,
-                is_active=True,
-                valid_from__lte=timezone.now(),
-                valid_to__gte=timezone.now()
-            )
+            coupon = Coupon.objects.get(code=code)
+            is_valid, msg = coupon.is_valid_for_user(request.user)
             
-            if request.user in coupon.used_by.all():
-                request.session['coupon_id'] = None
-                messages.error(request, 'You have already used this coupon')
-            else:
+            if is_valid:
                 request.session['coupon_id'] = coupon.id
                 messages.success(request, 'Coupon applied successfully')
+            else:
+                request.session['coupon_id'] = None
+                messages.error(request, msg)
 
         except Coupon.DoesNotExist:
             request.session['coupon_id'] = None

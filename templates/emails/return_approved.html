@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Return Approved — BazaarX</title>
+<style>
+  body { margin: 0; padding: 0; background: #f4f6f8; font-family: 'Segoe UI', Arial, sans-serif; }
+  .wrapper { max-width: 600px; margin: 40px auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+  .header { background: linear-gradient(135deg, #10b981, #059669); padding: 40px 30px; text-align: center; }
+  .header h1 { color: #fff; margin: 0; font-size: 26px; }
+  .header p { color: rgba(255,255,255,0.85); margin: 8px 0 0; font-size: 15px; }
+  .body { padding: 36px 32px; }
+  .alert-box { background: #d1fae5; border-left: 4px solid #10b981; border-radius: 8px; padding: 18px 20px; margin-bottom: 28px; }
+  .alert-box h3 { margin: 0 0 6px; color: #065f46; font-size: 16px; }
+  .alert-box p { margin: 0; color: #047857; font-size: 14px; }
+  .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+  .info-row:last-child { border-bottom: none; }
+  .info-row .label { color: #6b7280; }
+  .info-row .value { font-weight: 600; color: #111; }
+  .cta { text-align: center; margin: 32px 0; }
+  .cta a { background: linear-gradient(135deg, #10b981, #059669); color: #fff; text-decoration: none; padding: 14px 36px; border-radius: 50px; font-weight: 700; font-size: 15px; display: inline-block; }
+  .footer { background: #f9fafb; padding: 20px 32px; text-align: center; font-size: 12px; color: #9ca3af; border-top: 1px solid #e5e7eb; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <h1>✅ Return Request Approved!</h1>
+    <p>Great news — your return has been approved.</p>
+  </div>
+  <div class="body">
+    <p style="color:#374151; font-size:15px;">Hi <strong>{{ user.username }}</strong>,</p>
+    <p style="color:#6b7280; font-size:14px; line-height:1.7;">
+      We have reviewed your return request for Order <strong>#{{ order.id }}</strong> and it has been <strong style="color:#10b981;">approved</strong>.
+      Please allow 5–7 business days for your refund to be processed.
+    </p>
+
+    <div class="alert-box">
+      <h3>🔄 Refund Information</h3>
+      <p>Your refund will be credited to the original payment method within 5–7 business days.</p>
+    </div>
+
+    <div class="info-row"><span class="label">Order ID</span><span class="value">#{{ order.id }}</span></div>
+    <div class="info-row"><span class="label">Order Total</span><span class="value">₹{{ order.total_price }}</span></div>
+    <div class="info-row"><span class="label">Return Reason</span><span class="value">{{ return_request.reason|truncatechars:60 }}</span></div>
+    <div class="info-row"><span class="label">Return Status</span><span class="value" style="color:#10b981;">Approved ✅</span></div>
+
+    <div class="cta">
+      <a href="{{ site_url }}{% url 'returns:my_returns' %}">View My Returns</a>
+    </div>
+  </div>
+  <div class="footer">
+    <p>© BazaarX. Questions? Reply to this email or visit our Help Centre.</p>
+  </div>
+</div>
+</body>
+</html>

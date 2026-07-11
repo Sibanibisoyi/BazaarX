@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Cart, CartItem
@@ -9,6 +10,7 @@ from .models import SavedItem
 # Create your views here.
 @login_required
 def add_to_cart(request, product_id):
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     product = get_object_or_404(Product, id=product_id)
     cart, _ = Cart.objects.get_or_create(user=request.user)
 
@@ -20,9 +22,12 @@ def add_to_cart(request, product_id):
     # Check stock
     available_stock = variant.stock if variant else product.stock
     if available_stock <= 0:
+        if is_ajax:
+            return JsonResponse({'status': 'error', 'message': 'Sorry, this item is out of stock.'})
         messages.error(request, 'Sorry, this item is out of stock.')
         return redirect('products:product_detail', slug=product.slug)
 
+    msg = ''
     item, created = CartItem.objects.get_or_create(
         cart=cart, product=product, variant=variant
     )
@@ -30,8 +35,22 @@ def add_to_cart(request, product_id):
         if item.quantity < available_stock:
             item.quantity += 1
             item.save()
+            msg = f'{product.name} quantity updated in your cart.'
         else:
-            messages.warning(request, f'Maximum available quantity for this item is {available_stock}.')
+            msg = f'Maximum available quantity for this item is {available_stock}.'
+            if is_ajax:
+                return JsonResponse({'status': 'warning', 'message': msg})
+            messages.warning(request, msg)
+            return redirect('cart:cart_detail')
+    else:
+        msg = f'{product.name} added to cart!'
+
+    cart_count = cart.cartitem_set.count()
+
+    if is_ajax:
+        return JsonResponse({'status': 'success', 'message': msg, 'cart_count': cart_count})
+
+    messages.success(request, msg)
     return redirect('cart:cart_detail')
 
 @login_required

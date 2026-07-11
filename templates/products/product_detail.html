@@ -73,7 +73,7 @@
             <!-- Price Box -->
             <div class="my-4">
                 <div class="d-flex align-items-end mb-1">
-                    <h2 class="text-dark fw-bold mb-0 me-3">₹{{ product.price }}</h2>
+                    <h2 id="priceDisplay" class="text-dark fw-bold mb-0 me-3">&#8377;{{ product.price }}</h2>
                     {% if product.discount > 0 %}
                         <span class="text-muted text-decoration-line-through fs-5">₹<script>document.write(Math.round({{ product.price }} / (1 - {{ product.discount }}/100)))</script></span>
                         <span class="text-danger fw-bold ms-2">(Save {{ product.discount }}%)</span>
@@ -87,6 +87,18 @@
                 <h6 class="fw-bold mb-2">About this item</h6>
                 <p class="text-muted" style="line-height: 1.8;">{{ product.description }}</p>
             </div>
+
+            {% if product.has_variants %}
+            <!-- Size Selector -->
+            <div class="mb-4" id="sizeSelectorSection">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h6 class="fw-bold mb-0">Select Size</h6>
+                    <span id="selectedSizeLabel" class="text-primary-custom fw-semibold small"></span>
+                </div>
+                <div class="size-selector-wrap" id="sizeTiles"></div>
+                <p id="variantStockInfo" class="variant-stock-info mt-2"></p>
+            </div>
+            {% endif %}
 
             <!-- Meta Data List -->
             <ul class="list-unstyled mb-4 border rounded p-3 bg-light">
@@ -108,9 +120,10 @@
 
             <!-- Actions -->
             <div class="d-flex flex-column flex-sm-row gap-3 mt-4 pt-3 border-top">
-                <form method="POST" action="{% url 'cart:add_to_cart' product.id %}" class="flex-grow-1">
+                <form method="POST" action="{% url 'cart:add_to_cart' product.id %}" class="flex-grow-1" id="addToCartForm">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-warning w-100 py-3 fw-bold fs-5 shadow-sm d-flex align-items-center justify-content-center" {% if product.stock <= 0 %}disabled{% endif %}>
+                    <input type="hidden" name="variant_id" id="variantIdInput" value="">
+                    <button type="submit" id="addToCartBtn" class="btn btn-warning w-100 py-3 fw-bold fs-5 shadow-sm d-flex align-items-center justify-content-center" {% if product.stock <= 0 and not product.has_variants %}disabled{% endif %}>
                         <i class="fas fa-shopping-cart me-2"></i> Add to Cart
                     </button>
                 </form>
@@ -128,6 +141,42 @@
                 <a href="{% url 'products:add_to_compare' product.id %}" class="btn btn-outline-secondary py-3 px-4 shadow-sm d-flex align-items-center justify-content-center transition hover-primary" title="Compare">
                     <i class="fas fa-code-compare fs-5"></i>
                 </a>
+            </div>
+
+            <!-- Social Share -->
+            <div class="mt-4 d-flex align-items-center gap-2 flex-wrap">
+                <span class="text-muted small fw-semibold me-1"><i class="fas fa-share-alt me-1"></i>Share:</span>
+
+                <!-- WhatsApp -->
+                <a id="shareWhatsapp" href="#" target="_blank" rel="noopener"
+                   class="btn btn-sm rounded-pill fw-semibold"
+                   style="background:#25D366; color:#fff; border:none;"
+                   title="Share on WhatsApp">
+                    <i class="fab fa-whatsapp me-1"></i>WhatsApp
+                </a>
+
+                <!-- Twitter / X -->
+                <a id="shareTwitter" href="#" target="_blank" rel="noopener"
+                   class="btn btn-sm rounded-pill fw-semibold"
+                   style="background:#000; color:#fff; border:none;"
+                   title="Share on X">
+                    <i class="fab fa-x-twitter me-1"></i>X
+                </a>
+
+                <!-- Facebook -->
+                <a id="shareFacebook" href="#" target="_blank" rel="noopener"
+                   class="btn btn-sm rounded-pill fw-semibold"
+                   style="background:#1877F2; color:#fff; border:none;"
+                   title="Share on Facebook">
+                    <i class="fab fa-facebook-f me-1"></i>Facebook
+                </a>
+
+                <!-- Copy Link -->
+                <button id="copyLinkBtn" onclick="copyProductLink(this)"
+                        class="btn btn-sm btn-outline-secondary rounded-pill fw-semibold"
+                        title="Copy link">
+                    <i class="fas fa-link me-1"></i><span id="copyBtnText">Copy Link</span>
+                </button>
             </div>
 
             <!-- Trust Badges -->
@@ -197,6 +246,55 @@
     {% endfor %}
 </div>
 
+
+<!-- Q&A Section -->
+<div class="mt-5 mb-5 border-top pt-5" id="qa-section">
+    <h3 class="fw-bold mb-4">
+        Customer Questions & Answers
+        <span class="text-muted small">({{ questions|length }} questions)</span>
+    </h3>
+
+    <!-- Ask Question Form -->
+    {% if request.user.is_authenticated %}
+    <form method="POST" action="{% url 'products:ask_question' product.slug %}" class="mb-4 p-3 border rounded-3 bg-light">
+        {% csrf_token %}
+        <label class="form-label fw-semibold">Ask a Question</label>
+        <textarea name="question" class="form-control mb-2" rows="2" placeholder="Type your question here..." required></textarea>
+        <button type="submit" class="btn btn-primary">Submit Question</button>
+    </form>
+    {% else %}
+    <p class="text-muted"><a href="{% url 'users:login' %}">Login</a> to ask a question.</p>
+    {% endif %}
+
+    <!-- Questions List -->
+    {% for q in questions %}
+    <div class="border rounded-3 p-3 mb-3 bg-white shadow-sm">
+        <div class="d-flex align-items-start gap-2 mb-2">
+            <span class="badge bg-warning text-dark">Q</span>
+            <div>
+                <p class="mb-1 fw-semibold">{{ q.question }}</p>
+                <small class="text-muted">Asked by {{ q.user.username }} · {{ q.created_at|date:"M d, Y" }}</small>
+            </div>
+        </div>
+        {% if q.is_answered %}
+        <div class="d-flex align-items-start gap-2 mt-2 ps-3 border-start border-success border-3">
+            <span class="badge bg-success">A</span>
+            <div>
+                <p class="mb-1">{{ q.answer }}</p>
+                <small class="text-muted">Answered by Seller</small>
+            </div>
+        </div>
+        {% else %}
+        <div class="ps-3 mt-2">
+            <small class="text-muted fst-italic">No answer yet.</small>
+        </div>
+        {% endif %}
+    </div>
+    {% empty %}
+    <p class="text-muted">No questions yet — be the first to ask!</p>
+    {% endfor %}
+</div>
+
     <!-- Recently Viewed Section -->
     {% if recently_viewed %}
     <div class="mt-5 mb-5 border-top pt-5">
@@ -256,5 +354,107 @@
         });
         thumbEl.classList.add('border-primary', 'border-2', 'active-thumb');
     }
+</script>
+
+{% if product.has_variants %}
+<!-- Size Selector Script -->
+<script id="variantData" type="application/json">{{ variants_json|safe }}</script>
+<script>
+(function () {
+    const variants   = JSON.parse(document.getElementById('variantData').textContent);
+    const tilesWrap  = document.getElementById('sizeTiles');
+    const stockInfo  = document.getElementById('variantStockInfo');
+    const label      = document.getElementById('selectedSizeLabel');
+    const varInput   = document.getElementById('variantIdInput');
+    const addBtn     = document.getElementById('addToCartBtn');
+    const priceEl    = document.getElementById('priceDisplay');
+
+    function selectVariant(v) {
+        // Update tiles
+        tilesWrap.querySelectorAll('.size-tile').forEach(t => t.classList.remove('active'));
+        const tile = tilesWrap.querySelector(`[data-variant-id="${v.id}"]`);
+        if (tile) tile.classList.add('active');
+
+        // Update label
+        label.textContent = v.value;
+
+        // Update hidden input
+        varInput.value = v.id;
+
+        // Update stock info
+        if (v.stock <= 0) {
+            stockInfo.textContent = 'Out of stock for this size';
+            stockInfo.className   = 'variant-stock-info out-of-stock mt-2';
+            addBtn.disabled       = true;
+        } else if (v.stock <= 5) {
+            stockInfo.textContent = `Only ${v.stock} left in stock – order soon!`;
+            stockInfo.className   = 'variant-stock-info low-stock mt-2';
+            addBtn.disabled       = false;
+        } else {
+            stockInfo.textContent = `In Stock (${v.stock} available)`;
+            stockInfo.className   = 'variant-stock-info in-stock mt-2';
+            addBtn.disabled       = false;
+        }
+
+        // Update price if variant overrides it
+        if (priceEl) {
+            priceEl.textContent = '₹' + parseFloat(v.price).toLocaleString('en-IN');
+        }
+    }
+
+    // Build tiles
+    variants.forEach(v => {
+        const tile = document.createElement('div');
+        tile.className         = 'size-tile' + (v.stock <= 0 ? ' out-of-stock' : '');
+        tile.textContent       = v.value;
+        tile.dataset.variantId = v.id;
+        tile.title             = v.stock <= 0 ? 'Out of stock' : `Stock: ${v.stock}`;
+
+        if (v.stock > 0) {
+            tile.addEventListener('click', () => selectVariant(v));
+        }
+        tilesWrap.appendChild(tile);
+    });
+
+    // Pre-select first in-stock variant
+    const firstAvailable = variants.find(v => v.stock > 0);
+    if (firstAvailable) {
+        selectVariant(firstAvailable);
+    } else {
+        addBtn.disabled       = true;
+        stockInfo.textContent = 'All sizes are currently out of stock.';
+        stockInfo.className   = 'variant-stock-info out-of-stock mt-2';
+    }
+})();
+</script>
+{% endif %}
+
+<script>
+/* ── Social Share Buttons ── */
+(function () {
+    const url     = encodeURIComponent(window.location.href);
+    const title   = encodeURIComponent('{{ product.name|escapejs }} – Check this out on BazaarX!');
+
+    document.getElementById('shareWhatsapp').href  =
+        `https://wa.me/?text=${title}%20${url}`;
+
+    document.getElementById('shareTwitter').href   =
+        `https://twitter.com/intent/tweet?text=${title}&url=${url}`;
+
+    document.getElementById('shareFacebook').href  =
+        `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+})();
+
+function copyProductLink(btn) {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+        const label = document.getElementById('copyBtnText');
+        label.textContent = 'Copied!';
+        btn.classList.replace('btn-outline-secondary', 'btn-success');
+        setTimeout(() => {
+            label.textContent = 'Copy Link';
+            btn.classList.replace('btn-success', 'btn-outline-secondary');
+        }, 2000);
+    });
+}
 </script>
 {% endblock %}

@@ -7,12 +7,21 @@
 <div class="container mt-4 mb-5">
     
     <div class="row">
-        <!-- Account Sidebar (Optional desktop layout) -->
+        <!-- Account Sidebar -->
         <div class="col-lg-3 d-none d-lg-block mb-4">
             <div class="bg-white rounded shadow-sm border p-3 sticky-top" style="top: 100px;">
                 <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
-                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold fs-5" style="width: 50px; height: 50px;">
-                        {{ user.username|first|upper }}
+                    <div class="me-3">
+                        {% if request.user.profile_picture %}
+                            <img src="{{ request.user.profile_picture.url }}"
+                                 class="rounded-circle border"
+                                 style="width: 50px; height: 50px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold fs-5"
+                                 style="width: 50px; height: 50px;">
+                                {{ user.username|first|upper }}
+                            </div>
+                        {% endif %}
                     </div>
                     <div>
                         <p class="text-muted small mb-0">Hello,</p>
@@ -20,17 +29,40 @@
                     </div>
                 </div>
                 <div class="nav flex-column nav-pills gap-1">
-                    <a href="#" class="nav-link text-dark"><i class="fas fa-user text-muted me-3 w-20px text-center"></i> Profile Info</a>
-                    <a href="#" class="nav-link active bg-primary-custom"><i class="fas fa-box text-white me-3 w-20px text-center"></i> My Orders</a>
-                    <a href="{% url 'extras:wishlist_detail' %}" class="nav-link text-dark hover-bg-light transition"><i class="fas fa-heart text-muted me-3 w-20px text-center"></i> Wishlist</a>
-                    <a href="{% url 'cart:cart_detail' %}" class="nav-link text-dark hover-bg-light transition"><i class="fas fa-shopping-cart text-muted me-3 w-20px text-center"></i> Cart</a>
+                    <a href="{% url 'users:profile' %}" class="nav-link text-dark">
+                        <i class="fas fa-user text-muted me-3 w-20px text-center"></i>Profile Info
+                    </a>
+                    <a href="#" class="nav-link active bg-primary-custom">
+                        <i class="fas fa-box text-white me-3 w-20px text-center"></i>My Orders
+                    </a>
+                    <a href="{% url 'extras:wishlist_detail' %}" class="nav-link text-dark">
+                        <i class="fas fa-heart text-muted me-3 w-20px text-center"></i>Wishlist
+                    </a>
+                    <a href="{% url 'cart:cart_detail' %}" class="nav-link text-dark">
+                        <i class="fas fa-shopping-cart text-muted me-3 w-20px text-center"></i>Cart
+                    </a>
                 </div>
             </div>
         </div>
 
         <!-- Main Content -->
         <div class="col-lg-9">
-            <h2 class="fw-bold mb-4 pb-2 border-bottom"><i class="fas fa-box-open text-primary-custom me-2"></i>Order History</h2>
+            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                <h2 class="fw-bold mb-0">
+                    <i class="fas fa-box-open text-primary-custom me-2"></i>Order History
+                </h2>
+            </div>
+
+            <!-- Status Filter Tabs -->
+            <div class="d-flex flex-wrap gap-2 mb-4">
+                {% for label, value in filter_tabs %}
+                <a href="?status={{ value }}"
+                   class="btn btn-sm fw-semibold rounded-pill px-3
+                          {% if status_filter == value %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                    {{ label }}
+                </a>
+                {% endfor %}
+            </div>
 
             {% if orders %}
                 <div class="d-flex flex-column gap-4">
@@ -66,25 +98,65 @@
                         <div class="p-4">
                             <div class="d-flex align-items-center mb-3">
                                 {% if order.status == 'delivered' %}
-                                    <span class="badge bg-success px-3 py-2 rounded-pill"><i class="fas fa-check-circle me-1"></i> Delivered</span>
+                                    <span class="badge bg-success px-3 py-2 rounded-pill"><i class="fas fa-check-circle me-1"></i>Delivered</span>
                                 {% elif order.status == 'cancelled' %}
-                                    <span class="badge bg-danger px-3 py-2 rounded-pill"><i class="fas fa-times-circle me-1"></i> Cancelled</span>
+                                    <span class="badge bg-danger px-3 py-2 rounded-pill"><i class="fas fa-times-circle me-1"></i>Cancelled</span>
+                                {% elif order.status == 'shipped' %}
+                                    <span class="badge bg-info text-white px-3 py-2 rounded-pill"><i class="fas fa-truck me-1"></i>Shipped</span>
+                                {% elif order.status == 'confirmed' %}
+                                    <span class="badge bg-primary px-3 py-2 rounded-pill"><i class="fas fa-check me-1"></i>Confirmed</span>
                                 {% else %}
-                                    <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="fas fa-truck text-dark me-1"></i> {{ order.status|title }}</span>
+                                    <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="fas fa-clock me-1"></i>Pending</span>
                                 {% endif %}
                                 <span class="ms-3 text-muted small fw-medium">Order ID: #{{ order.id }}</span>
                             </div>
-                            
-                            <!-- Snippet of items (visual cue, since we don't have direct item access in this loop iteration easily without template tags, we rely on the generic card design) -->
-                            <div class="d-flex align-items-center">
-                                <div class="bg-light rounded p-3 d-flex align-items-center justify-content-center text-muted border border-dashed me-3" style="width: 80px; height: 80px;">
+
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-light rounded p-3 d-flex align-items-center justify-content-center text-muted border me-3" style="width: 80px; height: 80px;">
                                     <i class="fas fa-box fs-3"></i>
                                 </div>
                                 <div>
                                     <h6 class="fw-bold mb-1 text-dark">BazaarX Package</h6>
                                     <p class="text-muted small mb-0">Contains items from your order.</p>
-                                    <a href="{% url 'orders:order_detail' order.id %}" class="text-primary-custom small fw-semibold text-decoration-none">Track package <i class="fas fa-chevron-right ms-1" style="font-size: 0.7rem;"></i></a>
+                                    <a href="{% url 'orders:order_detail' order.id %}" class="text-primary-custom small fw-semibold text-decoration-none">
+                                        Track package <i class="fas fa-chevron-right ms-1" style="font-size: 0.7rem;"></i>
+                                    </a>
                                 </div>
+                            </div>
+
+                            <!-- Quick Actions -->
+                            <div class="d-flex flex-wrap gap-2 pt-2 border-top">
+                                {% if order.status == 'pending' or order.status == 'confirmed' %}
+                                <a href="{% url 'orders:cancel_order' order.id %}"
+                                   class="btn btn-outline-danger btn-sm fw-semibold">
+                                    <i class="fas fa-times-circle me-1"></i>Cancel Order
+                                </a>
+                                {% endif %}
+
+                                {% if order.status == 'delivered' and order.is_returnable %}
+                                <a href="{% url 'returns:raise_return' order.id %}"
+                                   class="btn btn-outline-warning btn-sm fw-semibold text-dark">
+                                    <i class="fas fa-undo me-1"></i>Return
+                                    {% if order.return_deadline %}
+                                    <span class="ms-1 badge" style="background:#fde68a; color:#92400e; font-size:0.7rem;">
+                                        by {{ order.return_deadline|date:"d M" }}
+                                    </span>
+                                    {% endif %}
+                                </a>
+                                {% elif order.status == 'delivered' and not order.is_returnable %}
+                                <span class="btn btn-outline-secondary btn-sm fw-semibold disabled" aria-disabled="true">
+                                    <i class="fas fa-lock me-1"></i>Return Closed
+                                </span>
+                                {% endif %}
+
+                                <!-- Buy Again (delivered or cancelled) -->
+                                {% if order.status == 'delivered' or order.status == 'cancelled' %}
+                                <a href="{% url 'orders:buy_again' order.id %}"
+                                   class="btn btn-sm fw-semibold"
+                                   style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; border: none;">
+                                    <i class="fas fa-redo me-1"></i>Buy Again
+                                </a>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -96,7 +168,8 @@
                     <ul class="pagination justify-content-center gap-1">
                         {% if page_obj.has_previous %}
                             <li class="page-item">
-                                <a class="page-link rounded-3 border-0 shadow-sm px-3" href="?page={{ page_obj.previous_page_number }}">
+                                <a class="page-link rounded-3 border-0 shadow-sm px-3"
+                                   href="?status={{ status_filter }}&page={{ page_obj.previous_page_number }}">
                                     <i class="fas fa-chevron-left"></i>
                                 </a>
                             </li>
@@ -109,14 +182,16 @@
                                 </li>
                             {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                                 <li class="page-item">
-                                    <a class="page-link rounded-3 border-0 shadow-sm px-3" href="?page={{ num }}">{{ num }}</a>
+                                    <a class="page-link rounded-3 border-0 shadow-sm px-3"
+                                       href="?status={{ status_filter }}&page={{ num }}">{{ num }}</a>
                                 </li>
                             {% endif %}
                         {% endfor %}
 
                         {% if page_obj.has_next %}
                             <li class="page-item">
-                                <a class="page-link rounded-3 border-0 shadow-sm px-3" href="?page={{ page_obj.next_page_number }}">
+                                <a class="page-link rounded-3 border-0 shadow-sm px-3"
+                                   href="?status={{ status_filter }}&page={{ page_obj.next_page_number }}">
                                     <i class="fas fa-chevron-right"></i>
                                 </a>
                             </li>
@@ -128,15 +203,24 @@
 
             {% else %}
                 <div class="text-center py-5 bg-white rounded shadow-sm border mt-4">
-                    <img src="https://cdni.iconscout.com/illustration/premium/thumb/empty-box-4152220-3444458.png" alt="No Orders" style="width: 200px; opacity: 0.8;" class="mb-4">
-                    <h3 class="fw-bold text-dark mb-2">No Orders Found</h3>
-                    <p class="text-muted mb-4">You haven't placed any orders yet. Start exploring our amazing collection!</p>
+                    <img src="https://cdni.iconscout.com/illustration/premium/thumb/empty-box-4152220-3444458.png"
+                         alt="No Orders" style="width: 200px; opacity: 0.8;" class="mb-4">
+                    <h3 class="fw-bold text-dark mb-2">
+                        {% if status_filter %}No {{ status_filter|title }} Orders{% else %}No Orders Found{% endif %}
+                    </h3>
+                    <p class="text-muted mb-4">
+                        {% if status_filter %}
+                            You have no orders with status "{{ status_filter }}".
+                            <a href="{% url 'orders:my_orders' %}" class="text-primary-custom fw-semibold">View all orders</a>
+                        {% else %}
+                            You haven't placed any orders yet. Start exploring our amazing collection!
+                        {% endif %}
+                    </p>
                     <a href="{% url 'products:home' %}" class="btn btn-primary px-5 py-3 rounded-pill fw-bold shadow-sm hover-lift">
                         Start Shopping
                     </a>
                 </div>
             {% endif %}
-
         </div>
     </div>
 </div>

@@ -6,6 +6,23 @@
         <div class="discount-badge">{{ product.discount }}% OFF</div>
         {% endif %}
 
+        <!-- Low-stock badge -->
+        {% if product.stock > 0 and product.stock <= 5 %}
+        <div style="position:absolute; top:8px; left:8px; z-index:3;">
+            <span class="badge rounded-pill"
+                  style="background:linear-gradient(135deg,#f97316,#ea580c); color:#fff; font-size:0.7rem; font-weight:700; padding:4px 10px; box-shadow:0 2px 6px rgba(234,88,12,.35);">
+                <i class="fas fa-fire me-1"></i>Only {{ product.stock }} left!
+            </span>
+        </div>
+        {% elif product.stock == 0 %}
+        <div style="position:absolute; top:8px; left:8px; z-index:3;">
+            <span class="badge rounded-pill"
+                  style="background:#6b7280; color:#fff; font-size:0.7rem; font-weight:700; padding:4px 10px;">
+                Out of Stock
+            </span>
+        </div>
+        {% endif %}
+
         <div class="product-img-wrapper">
             {% if product.image %}
                 <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-img">
@@ -50,7 +67,11 @@
                 </div>
                 <form method="POST" action="{% url 'cart:add_to_cart' product.id %}" class="ms-auto">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-primary rounded-circle" style="width: 40px; height: 40px; padding: 0;" title="Add to Cart">
+                    <button type="submit"
+                            class="btn btn-primary rounded-circle"
+                            style="width: 40px; height: 40px; padding: 0;"
+                            title="Add to Cart"
+                            {% if product.stock == 0 %}disabled{% endif %}>
                         <i class="fas fa-cart-plus"></i>
                     </button>
                 </form>

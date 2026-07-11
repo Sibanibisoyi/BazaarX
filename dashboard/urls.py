@@ -6,7 +6,6 @@ app_name = 'dashboard'
 urlpatterns = [
     path('', views.admin_dashboard, name='admin_dashboard'),
     path('approve-seller/<int:seller_id>/', views.approve_seller, name='approve_seller'),
-    path('reject-return/<int:return_id>/', views.reject_return, name='reject_return'),
     path('login/', views.admin_login, name='admin_login'),
     path('logout/', views.admin_logout, name='admin_logout'),
     path('products/', views.admin_products, name='admin_products'),

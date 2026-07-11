@@ -27,14 +27,11 @@
                 <label for="status" class="form-label fw-bold">Update Order Status:</label>
                 <div class="input-group" style="max-width: 400px;">
                     <select name="status" id="status" class="form-select">
-                        <option value="Pending" {% if orders.status == 'Pending' %}selected{% endif %}>Pending</option>
-                        <option value="Processing" {% if orders.status == 'Processing' %}selected{% endif %}>Processing
-                        </option>
-                        <option value="Shipped" {% if orders.status == 'Shipped' %}selected{% endif %}>Shipped</option>
-                        <option value="Delivered" {% if orders.status == 'Delivered' %}selected{% endif %}>Delivered
-                        </option>
-                        <option value="Cancelled" {% if orders.status == 'Cancelled' %}selected{% endif %}>Cancelled
-                        </option>
+                        <option value="pending" {% if orders.status == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="confirmed" {% if orders.status == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                        <option value="shipped" {% if orders.status == 'shipped' %}selected{% endif %}>Shipped</option>
+                        <option value="delivered" {% if orders.status == 'delivered' %}selected{% endif %}>Delivered</option>
+                        <option value="cancelled" {% if orders.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
                     </select>
                     <button type="submit" class="btn btn-primary">Save Status</button>
                 </div>

@@ -14,5 +14,9 @@ urlpatterns = [
     path('ajax/load-more/', views.load_more_products, name='load_more_products'),
     path('ajax/category/<slug:slug>/load-more/', views.load_more_category_products, name='load_more_category_products'),
     path('ajax/search-autocomplete/', views.search_autocomplete, name='search_autocomplete'),
+    path('question/answer/<int:question_id>/', views.answer_question, name='answer_question'),
+    path('<slug:slug>/ask/', views.ask_question, name='ask_question'),
+    path('questions/', views.admin_questions, name='admin_questions'),
+    
 ]
 

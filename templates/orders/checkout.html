@@ -134,10 +134,15 @@
                             </div>
                             <div class="ms-3 flex-grow-1">
                                 <h6 class="mb-0 text-dark fw-semibold small line-clamp-2" title="{{ item.product.name }}">{{ item.product.name }}</h6>
-                                <span class="text-muted small">₹{{ item.product.price }} each</span>
+                                {% if item.variant %}
+                                <span class="badge mt-1" style="background:#fff3e0; color:#e65c00; border:1px solid #ffcc99; font-size:0.72rem;">
+                                    {{ item.variant.name }}: {{ item.variant.value }}
+                                </span>
+                                {% endif %}
+                                <span class="text-muted small d-block">&#8377;{{ item.effective_price }} each</span>
                             </div>
                             <div class="ms-2 fw-bold text-dark">
-                                ₹<script>document.write({{ item.product.price }} * {{ item.quantity }})</script>
+                                &#8377;<script>document.write(({{ item.effective_price }} * {{ item.quantity }}).toLocaleString('en-IN'))</script>
                             </div>
                         </div>
                         {% endfor %}
