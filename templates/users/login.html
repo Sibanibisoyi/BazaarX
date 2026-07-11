@@ -42,10 +42,29 @@
                                 <label for="floatingUsername" class="text-muted"><i class="fas fa-user me-2"></i>Username</label>
                             </div>
 
-                            <div class="form-floating mb-4">
-                                <input type="password" name="password" class="form-control bg-light border-0 shadow-none" id="floatingPassword" placeholder="Password" required>
+                            <div class="form-floating mb-4 position-relative">
+                                <input type="password" name="password" class="form-control bg-light border-0 shadow-none pe-5" id="floatingPassword" placeholder="Password" required>
                                 <label for="floatingPassword" class="text-muted"><i class="fas fa-lock me-2"></i>Password</label>
+                                <button type="button" class="btn border-0 position-absolute end-0 top-50 translate-middle-y text-muted" id="togglePasswordLogin" style="z-index: 10;">
+                                    <i class="fas fa-eye"></i>
+                                </button>
                             </div>
+
+                            <script>
+                                document.getElementById('togglePasswordLogin').addEventListener('click', function() {
+                                    const pwdInput = document.getElementById('floatingPassword');
+                                    const icon = this.querySelector('i');
+                                    if (pwdInput.type === 'password') {
+                                        pwdInput.type = 'text';
+                                        icon.classList.remove('fa-eye');
+                                        icon.classList.add('fa-eye-slash');
+                                    } else {
+                                        pwdInput.type = 'password';
+                                        icon.classList.remove('fa-eye-slash');
+                                        icon.classList.add('fa-eye');
+                                    }
+                                });
+                            </script>
                             
                             <div class="d-flex justify-content-between align-items-center mb-4 small">
                                 <div class="form-check">

@@ -132,6 +132,106 @@ if (btn && 'webkitSpeechRecognition' in window) {
 } else {
     console.log('Voice not supported or button not found');
 }
+
+// Global Form Submit Loading Spinner
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            // Don't trigger if HTML5 validation fails
+            if (!this.checkValidity()) return;
+            
+            const submitBtn = this.querySelector('button[type="submit"]');
+            if (submitBtn && !submitBtn.hasAttribute('data-no-spinner')) {
+                // Ensure we don't double click
+                if (submitBtn.classList.contains('disabled')) {
+                    e.preventDefault();
+                    return;
+                }
+                
+                // Add spinner and disable
+                const originalContent = submitBtn.innerHTML;
+                submitBtn.dataset.originalText = originalContent;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Please wait...';
+                submitBtn.classList.add('disabled');
+                submitBtn.style.pointerEvents = 'none';
+            }
+        });
+    });
+});
+
+// Animated Form Validation (Red Border + Shake)
+document.addEventListener('DOMContentLoaded', function() {
+    const forms = document.querySelectorAll('form:not(.no-validate)');
+    forms.forEach(form => {
+        // Disable default HTML5 popup validation visually to use custom shake
+        form.setAttribute('novalidate', true);
+        
+        form.addEventListener('submit', event => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                // Find all invalid inputs and shake them
+                const invalidInputs = form.querySelectorAll(':invalid');
+                invalidInputs.forEach(input => {
+                    input.classList.remove('is-invalid-shake'); // reset animation
+                    void input.offsetWidth; // trigger reflow
+                    input.classList.add('is-invalid-shake');
+                    input.classList.add('is-invalid'); // bootstrap standard red border
+                    
+                    // Add listener to remove red border once user types
+                    input.addEventListener('input', function() {
+                        if(this.checkValidity()) {
+                            this.classList.remove('is-invalid');
+                            this.classList.remove('is-invalid-shake');
+                        }
+                    }, { once: true });
+                });
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
+});
+
+// Auto-Formatting Inputs
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Format Pincode (Only numbers, max 6 digits)
+    const pincodeInputs = document.querySelectorAll('input[name="pincode"], input[placeholder*="pincode" i]');
+    pincodeInputs.forEach(input => {
+        input.addEventListener('input', function(e) {
+            // Strip any non-digit character instantly
+            this.value = this.value.replace(/\D/g, '').substring(0, 6);
+        });
+    });
+
+    // 2. Format Phone Numbers (Optional spacing)
+    const phoneInputs = document.querySelectorAll('input[name="phone_number"], input[type="tel"]');
+    phoneInputs.forEach(input => {
+        input.addEventListener('input', function(e) {
+            // Very basic phone strip to digits
+            let val = this.value.replace(/\D/g, '').substring(0, 10);
+            if(val.length > 5) {
+                // Format like 98765 43210
+                this.value = val.substring(0, 5) + ' ' + val.substring(5);
+            } else {
+                this.value = val;
+            }
+        });
+    });
+});
 </script>
+
+<style>
+/* CSS for Form Shake Animation */
+@keyframes shakeInvalid {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+}
+.is-invalid-shake {
+    animation: shakeInvalid 0.35s ease-in-out;
+    border-color: #dc3545 !important;
+}
+</style>
 </body>
 </html>

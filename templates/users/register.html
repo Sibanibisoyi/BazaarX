@@ -87,5 +87,55 @@
         display: block;
         font-size: 0.8rem;
     }
+    
+    /* Ensure password fields have padding for the eye icon */
+    input[type="password"], input.password-toggled {
+        padding-right: 40px !important;
+    }
 </style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const passwordInputs = document.querySelectorAll('input[type="password"]');
+        passwordInputs.forEach(input => {
+            // Ensure parent is relative for absolute positioning of the icon
+            if(window.getComputedStyle(input.parentElement).position === 'static') {
+                input.parentElement.style.position = 'relative';
+            }
+            
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn border-0 text-muted position-absolute';
+            btn.style.right = '5px';
+            // Adjust top depending on if there's a label inside the parent or just the input
+            btn.style.top = input.offsetTop + (input.offsetHeight / 2) + 'px';
+            btn.style.transform = 'translateY(-50%)';
+            btn.style.zIndex = '10';
+            btn.style.padding = '0 10px';
+            btn.innerHTML = '<i class="fas fa-eye"></i>';
+            
+            input.parentElement.appendChild(btn);
+            
+            // Re-adjust position on window resize just in case
+            window.addEventListener('resize', () => {
+                btn.style.top = input.offsetTop + (input.offsetHeight / 2) + 'px';
+            });
+            
+            btn.addEventListener('click', function() {
+                const icon = this.querySelector('i');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    input.classList.add('password-toggled');
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    input.type = 'password';
+                    input.classList.remove('password-toggled');
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}
