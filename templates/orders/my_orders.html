@@ -112,16 +112,31 @@
                             </div>
 
                             <div class="d-flex align-items-center mb-3">
-                                <div class="bg-light rounded p-3 d-flex align-items-center justify-content-center text-muted border me-3" style="width: 80px; height: 80px;">
-                                    <i class="fas fa-box fs-3"></i>
+                                {% with first_item=order.orderitem_set.all.0 item_count=order.orderitem_set.all|length %}
+                                <div class="d-flex align-items-center justify-content-center border me-3 rounded overflow-hidden bg-white" style="width: 80px; height: 80px; flex-shrink: 0;">
+                                    {% if first_item and first_item.product and first_item.product.image %}
+                                        <img src="{{ first_item.product.image.url }}" alt="{{ first_item.product.name }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                    {% else %}
+                                        <img src="https://placehold.co/80x80/eeeeee/999999?text=Img" class="img-fluid" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                    {% endif %}
                                 </div>
                                 <div>
-                                    <h6 class="fw-bold mb-1 text-dark">BazaarX Package</h6>
-                                    <p class="text-muted small mb-0">Contains items from your order.</p>
+                                    <h6 class="fw-bold mb-1 text-dark" style="line-height: 1.3;">
+                                        {% if first_item and first_item.product %}
+                                            {{ first_item.product.name|truncatechars:45 }}
+                                            {% if item_count > 1 %}
+                                                <span class="text-muted fw-normal fs-6"> + {{ item_count|add:"-1" }} more item{{ item_count|add:"-1"|pluralize }}</span>
+                                            {% endif %}
+                                        {% else %}
+                                            Product Unavailable
+                                        {% endif %}
+                                    </h6>
+                                    <p class="text-muted small mb-1">Contains items from your order.</p>
                                     <a href="{% url 'orders:order_detail' order.id %}" class="text-primary-custom small fw-semibold text-decoration-none">
                                         Track package <i class="fas fa-chevron-right ms-1" style="font-size: 0.7rem;"></i>
                                     </a>
                                 </div>
+                                {% endwith %}
                             </div>
 
                             <!-- Quick Actions -->

@@ -150,7 +150,7 @@ def order_confirmation(request, order_id):
 @login_required
 def my_orders(request):
     status_filter = request.GET.get('status', '')
-    orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    orders = Order.objects.filter(user=request.user).order_by('-created_at').prefetch_related('orderitem_set__product')
     if status_filter and status_filter in ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled']:
         orders = orders.filter(status=status_filter)
 

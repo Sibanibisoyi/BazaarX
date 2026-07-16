@@ -89,10 +89,10 @@
             </div>
 
             {% if product.has_variants %}
-            <!-- Size Selector -->
+            <!-- Option Selector -->
             <div class="mb-4" id="sizeSelectorSection">
                 <div class="d-flex align-items-center justify-content-between mb-2">
-                    <h6 class="fw-bold mb-0">Select Size</h6>
+                    <h6 class="fw-bold mb-0">Select {{ variant_name|default:"Option" }}</h6>
                     <span id="selectedSizeLabel" class="text-primary-custom fw-semibold small"></span>
                 </div>
                 <div class="size-selector-wrap" id="sizeTiles"></div>
@@ -213,18 +213,25 @@
 
     {% if request.user.is_authenticated %}
         {% if not user_has_reviewed %}
-        <form method="POST" action="{% url 'products:submit_review' product.slug %}" class="mb-4 p-3 border rounded-3 bg-light">
-            {% csrf_token %}
-            <div class="mb-2">
-                <label class="form-label fw-semibold">Rating</label>
-                {{ review_form.rating }}
+            {% if can_review %}
+            <form method="POST" action="{% url 'products:submit_review' product.slug %}" class="mb-4 p-3 border rounded-3 bg-light">
+                {% csrf_token %}
+                <div class="mb-2">
+                    <label class="form-label fw-semibold">Rating</label>
+                    {{ review_form.rating }}
+                </div>
+                <div class="mb-2">
+                    <label class="form-label fw-semibold">Comment</label>
+                    {{ review_form.comment }}
+                </div>
+                <button type="submit" class="btn btn-primary mt-2">Submit Review</button>
+            </form>
+            {% else %}
+            <div class="alert alert-secondary d-flex align-items-center mb-4 border-0">
+                <i class="fas fa-lock fs-5 me-3 text-muted"></i>
+                <p class="mb-0 text-muted">You can only write a review after purchasing and receiving this product.</p>
             </div>
-            <div class="mb-2">
-                <label class="form-label fw-semibold">Comment</label>
-                {{ review_form.comment }}
-            </div>
-            <button type="submit" class="btn btn-primary mt-2">Submit Review</button>
-        </form>
+            {% endif %}
         {% else %}
         <p class="text-muted">You have already reviewed this product.</p>
         {% endif %}

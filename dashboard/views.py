@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from orders.models import Order
-from products.models import Product, ProductImage
+from products.models import Product, ProductImage, ProductVariant
 from seller.models import Seller
 from returns.models import ReturnRequest
 from django.db.models import Sum, Count
@@ -124,6 +124,19 @@ def admin_add_product(request):
             for img in images:
                 ProductImage.objects.create(product=product, image=img)
             
+            # Save variants
+            sizes = form.cleaned_data.get('sizes')
+            if sizes:
+                size_list = [s.strip() for s in sizes.split(',') if s.strip()]
+                for size in size_list:
+                    ProductVariant.objects.create(product=product, name='Size', value=size, stock=product.stock)
+
+            quantities = form.cleaned_data.get('quantities')
+            if quantities:
+                qty_list = [q.strip() for q in quantities.split(',') if q.strip()]
+                for qty in qty_list:
+                    ProductVariant.objects.create(product=product, name='Quantity', value=qty, stock=product.stock)
+            
             messages.success(request, 'Product added successfully.')
             return redirect('dashboard:admin_products')
     else:
@@ -143,6 +156,33 @@ def admin_edit_product(request, product_id):
             images = request.FILES.getlist('extra_images')
             for img in images:
                 ProductImage.objects.create(product=product, image=img)
+            
+            # Update variants
+            sizes = form.cleaned_data.get('sizes')
+            existing_size_variants = product.productvariant_set.filter(name__iexact='Size')
+            if sizes:
+                size_list = [s.strip() for s in sizes.split(',') if s.strip()]
+                existing_size_variants.exclude(value__in=size_list).delete()
+                for size in size_list:
+                    ProductVariant.objects.get_or_create(
+                        product=product, name='Size', value=size,
+                        defaults={'stock': product.stock}
+                    )
+            else:
+                existing_size_variants.delete()
+
+            quantities = form.cleaned_data.get('quantities')
+            existing_qty_variants = product.productvariant_set.filter(name__iexact='Quantity')
+            if quantities:
+                qty_list = [q.strip() for q in quantities.split(',') if q.strip()]
+                existing_qty_variants.exclude(value__in=qty_list).delete()
+                for qty in qty_list:
+                    ProductVariant.objects.get_or_create(
+                        product=product, name='Quantity', value=qty,
+                        defaults={'stock': product.stock}
+                    )
+            else:
+                existing_qty_variants.delete()
             
             messages.success(request, 'Product updated successfully.')
             return redirect('dashboard:admin_products')

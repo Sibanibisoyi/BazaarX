@@ -57,14 +57,17 @@ def product_detail(request, slug):
     questions = ProductQuestion.objects.filter(product=product).order_by('-created_at')
     user_has_reviewed = False
     in_wishlist = False
+    can_review = False
     if request.user.is_authenticated:
         user_has_reviewed = Review.objects.filter(product=product, user=request.user).exists()
         from extras.models import Wishlist
         in_wishlist = Wishlist.objects.filter(user=request.user, product=product).exists()
+        from orders.models import Order
+        can_review = Order.objects.filter(user=request.user, status='delivered', orderitem__product=product).exists()
     review_form = ReviewForm()
 
     # Build variant data for JS size selector
-    variants_qs = product.productvariant_set.filter(name='Size').order_by('value')
+    variants_qs = product.productvariant_set.all().order_by('value')
     # Keep defined size order
     size_order = ['S', 'M', 'L', 'XL', 'XXL']
     variants_sorted = sorted(variants_qs, key=lambda v: size_order.index(v.value) if v.value in size_order else 99)
@@ -78,6 +81,7 @@ def product_detail(request, slug):
         }
         for v in variants_sorted
     ]
+    variant_name = variants_sorted[0].name if variants_sorted else "Option"
 
     return render(request, 'products/product_detail.html', {
         'product': product,
@@ -87,10 +91,12 @@ def product_detail(request, slug):
         'avg_rating': avg_rating,
         'review_count': review_count,
         'user_has_reviewed': user_has_reviewed,
+        'can_review': can_review,
         'review_form': review_form,
         'in_wishlist': in_wishlist,
         'questions': questions,
         'variants_json': json.dumps(variants_data),
+        'variant_name': variant_name,
     })
 
 def search(request):
@@ -154,6 +160,13 @@ def category_page(request, slug):
 @login_required
 def submit_review(request, slug):
     product = get_object_or_404(Product, slug=slug)
+    
+    from orders.models import Order
+    can_review = Order.objects.filter(user=request.user, status='delivered', orderitem__product=product).exists()
+    if not can_review:
+        messages.error(request, 'You can only review products that you have purchased and received.')
+        return redirect('products:product_detail', slug=slug)
+
     existing_review = Review.objects.filter(product=product, user=request.user).first()
 
     if existing_review:
