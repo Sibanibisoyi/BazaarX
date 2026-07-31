@@ -168,13 +168,12 @@ def submit_review(request, slug):
         return redirect('products:product_detail', slug=slug)
 
     existing_review = Review.objects.filter(product=product, user=request.user).first()
-
     if existing_review:
         messages.info(request, 'You have already reviewed this product')
         return redirect('products:product_detail', slug=slug)
 
     if request.method == 'POST':
-        form = ReviewForm(request.POST)
+        form = ReviewForm(request.POST, request.FILES)
         if form.is_valid():
             review = form.save(commit=False)
             review.product = product
@@ -184,6 +183,18 @@ def submit_review(request, slug):
             return redirect('products:product_detail', slug=slug)
 
     return redirect('products:product_detail', slug=slug)
+
+
+@login_required
+def vote_review_helpful(request, review_id):
+    if request.method == 'POST':
+        review = get_object_or_404(Review, id=review_id)
+        if review.user == request.user:
+            return JsonResponse({'error': "You can't vote your own review helpful."}, status=400)
+        review.helpful_votes += 1
+        review.save()
+        return JsonResponse({'helpful_votes': review.helpful_votes})
+    return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
 def load_more_products(request):

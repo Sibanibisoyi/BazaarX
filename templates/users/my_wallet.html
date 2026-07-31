@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Wallet | BazaarX{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fw-bold"><i class="fas fa-wallet text-primary me-2"></i>My Wallet</h3>
+                <a href="{% url 'users:profile' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Profile
+                </a>
+            </div>
+
+            <!-- Wallet Balance Card -->
+            <div class="bg-white rounded shadow-sm border p-4 mb-4">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <p class="text-muted mb-1 small text-uppercase fw-semibold">Available Balance</p>
+                        <h2 class="fw-bold text-success mb-0">₹{{ wallet.balance }}</h2>
+                    </div>
+                    <div>
+                        <i class="fas fa-wallet text-success" style="font-size: 3rem; opacity: 0.2;"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transactions -->
+            <div class="bg-white rounded shadow-sm border overflow-hidden">
+                <div class="bg-light p-3 border-bottom">
+                    <h5 class="fw-bold mb-0">Transaction History</h5>
+                </div>
+                <div class="p-0">
+                    {% if transactions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Description</th>
+                                        <th class="text-end">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for tx in transactions %}
+                                    <tr>
+                                        <td>
+                                            <div class="fw-semibold">{{ tx.created_at|date:"d M Y" }}</div>
+                                            <div class="small text-muted">{{ tx.created_at|time:"h:i A" }}</div>
+                                        </td>
+                                        <td>
+                                            {{ tx.description }}
+                                            <div class="small mt-1">
+                                                {% if tx.transaction_type == 'credit' %}
+                                                    <span class="badge bg-success bg-opacity-10 text-success"><i class="fas fa-arrow-down me-1"></i> Credit</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger bg-opacity-10 text-danger"><i class="fas fa-arrow-up me-1"></i> Debit</span>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td class="text-end fw-bold {% if tx.transaction_type == 'credit' %}text-success{% else %}text-danger{% endif %}">
+                                            {% if tx.transaction_type == 'credit' %}+{% else %}-{% endif %}₹{{ tx.amount }}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="p-5 text-center">
+                            <i class="fas fa-receipt text-muted mb-3" style="font-size: 3rem; opacity: 0.5;"></i>
+                            <h6 class="fw-bold text-muted mb-1">No Transactions Yet</h6>
+                            <p class="text-muted small mb-0">Your wallet transactions will appear here.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

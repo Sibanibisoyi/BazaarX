@@ -1,0 +1,11 @@
+Based on a review of your project files (like `README.md`, `models.py`, and `urls.py`), you've already built a very impressive platform with OTP login, Razorpay, loyalty points, infinite scroll, size variants, returns, and flash sales! 
+
+Here are **5 great features** that are standard in modern e-commerce but are **not yet implemented** in BazaarX:
+
+### 1. Visual Order Tracking Timeline
+**What it is:** Currently, your `Order` model has a `status` field (`pending`, `shipped`, `delivered`), but it doesn't track *when* each status changed.
+**How to build it:** Create an `OrderTracking` model that logs every status update with a timestamp. On the frontend, build a visual progress bar (like Amazon or Flipkart) showing the timeline: `Placed (10:00 AM) → Confirmed (11:00 AM) → Shipped (Yesterday) → Delivered`.
+
+### 2. Digital Wallet System (BazaarX Wallet)
+**What it is:** You already have "Loyalty Points," but a true Wallet system allows users to store actual money for fast checkout. 
+<truncated 1788 bytes>

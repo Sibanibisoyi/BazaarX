@@ -31,24 +31,36 @@
                 <div class="progress-step {% if order.status == 'pending' or order.status == 'confirmed' or order.status == 'shipped' or order.status == 'delivered' %}active{% endif %}" style="width: 25%;">
                     <div class="progress-icon"><i class="fas fa-clipboard-list"></i></div>
                     <p class="small fw-bold mb-0">Pending</p>
+                    {% if order.pending_tracked_at %}
+                    <p class="small text-muted mb-0" style="font-size: 0.75rem;">{{ order.pending_tracked_at|date:"d M, h:i A" }}</p>
+                    {% endif %}
                 </div>
                 
                 <!-- Confirmed -->
                 <div class="progress-step {% if order.status == 'confirmed' or order.status == 'shipped' or order.status == 'delivered' %}active{% endif %}" style="width: 25%;">
                     <div class="progress-icon"><i class="fas fa-box-open"></i></div>
                     <p class="small fw-bold mb-0">Confirmed</p>
+                    {% if order.confirmed_tracked_at %}
+                    <p class="small text-muted mb-0" style="font-size: 0.75rem;">{{ order.confirmed_tracked_at|date:"d M, h:i A" }}</p>
+                    {% endif %}
                 </div>
                 
                 <!-- Shipped -->
                 <div class="progress-step {% if order.status == 'shipped' or order.status == 'delivered' %}active{% endif %}" style="width: 25%;">
                     <div class="progress-icon"><i class="fas fa-shipping-fast"></i></div>
                     <p class="small fw-bold mb-0">Shipped</p>
+                    {% if order.shipped_tracked_at %}
+                    <p class="small text-muted mb-0" style="font-size: 0.75rem;">{{ order.shipped_tracked_at|date:"d M, h:i A" }}</p>
+                    {% endif %}
                 </div>
                 
                 <!-- Delivered -->
                 <div class="progress-step {% if order.status == 'delivered' %}active{% endif %}" style="width: 25%;">
                     <div class="progress-icon"><i class="fas fa-home"></i></div>
                     <p class="small fw-bold mb-0">Delivered</p>
+                    {% if order.delivered_tracked_at %}
+                    <p class="small text-muted mb-0" style="font-size: 0.75rem;">{{ order.delivered_tracked_at|date:"d M, h:i A" }}</p>
+                    {% endif %}
                 </div>
             </div>
             
@@ -58,6 +70,9 @@
                 <div>
                     <strong>Order Cancelled</strong>
                     <p class="mb-0 small">This order has been cancelled and will not be delivered.</p>
+                    {% if order.cancelled_tracked_at %}
+                    <p class="mb-0 small text-muted mt-1">Cancelled on: {{ order.cancelled_tracked_at|date:"d M, h:i A" }}</p>
+                    {% endif %}
                 </div>
             </div>
             {% endif %}

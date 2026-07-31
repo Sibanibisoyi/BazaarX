@@ -11,7 +11,9 @@
         <p class="text-muted">Complete your order in just one step</p>
     </div>
 
-    <form method="POST" action="{% url 'orders:place_order' %}">
+    <form method="POST" action="{% url 'orders:checkout' %}" id="checkoutForm">
+        {% csrf_token %}
+
         {% csrf_token %}
         <div class="row g-4">
             
@@ -165,19 +167,38 @@
                             <span>-₹{{ points_discount }}</span>
                         </li>
                         {% endif %}
+                        {% if wallet_discount %}
+                        <li class="d-flex justify-content-between mb-2 small text-success fw-semibold">
+                            <span><i class="fas fa-wallet me-1"></i>Wallet Applied</span>
+                            <span>-₹{{ wallet_discount }}</span>
+                        </li>
+                        {% endif %}
                         <li class="d-flex justify-content-between mb-2 small text-muted">
                             <span>Shipping</span>
                             <span class="text-success fw-bold">FREE</span>
                         </li>
+                        
+                        {% if wallet_balance > 0 %}
+                        <li class="mt-3 pt-3 border-top">
+                            <div class="form-check bg-light p-2 rounded border">
+                                <input class="form-check-input ms-1" type="checkbox" name="use_wallet" value="1" id="useWallet" onchange="this.form.submit()">
+                                <label class="form-check-label fw-bold ms-2" for="useWallet">
+                                    <i class="fas fa-wallet text-primary me-1"></i> Use Wallet Balance (₹{{ wallet_balance }})
+                                </label>
+                            </div>
+                        </li>
+                        {% endif %}
+
                         <li class="d-flex justify-content-between mt-3 pt-3 border-top align-items-center">
                             <span class="fw-bold fs-5 text-dark">Total</span>
                             <span class="fw-bold fs-3 text-danger">₹{{ total }}</span>
                         </li>
                     </ul>
 
-                    <button type="submit" class="btn btn-warning w-100 py-3 fw-bold fs-5 shadow-sm rounded-pill text-dark position-relative overflow-hidden group" id="place-order-btn">
+                    <button type="button" onclick="submitOrder()" class="btn btn-warning w-100 py-3 fw-bold fs-5 shadow-sm rounded-pill text-dark position-relative overflow-hidden group" id="place-order-btn">
                         <span id="btn-label">Pay Online & Place Order</span> <i class="fas fa-lock ms-2 small"></i>
                     </button>
+
                     
                     <p class="text-center text-muted small mt-3 mb-0">
                         By placing your order, you agree to BazaarX's <a href="#" class="text-decoration-none">privacy notice</a> and <a href="#" class="text-decoration-none">conditions of use</a>.
@@ -235,5 +256,12 @@
             document.getElementById('payment-note-text').textContent = "Your payment is secured by Razorpay's 256-bit encryption.";
         }
     }
+
+    function submitOrder() {
+        const form = document.getElementById('checkoutForm');
+        form.action = "{% url 'orders:place_order' %}";
+        form.submit();
+    }
 </script>
+
 {% endblock %}

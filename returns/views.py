@@ -57,11 +57,26 @@ def my_returns(request):
 
 @login_required
 def approve_return(request, return_id):
+    from users.models import WalletTransaction
     return_request = get_object_or_404(ReturnRequest, id=return_id)
     return_request.status = 'approved'
     return_request.save()
+    
+    # Refund to wallet
+    wallet = return_request.user.wallet
+    refund_amount = return_request.order.total_price
+    wallet.balance += refund_amount
+    wallet.save()
+    
+    WalletTransaction.objects.create(
+        wallet=wallet,
+        amount=refund_amount,
+        transaction_type='credit',
+        description=f'Refund for Return #{return_request.id} (Order #{return_request.order.id})'
+    )
+    
     send_return_approved_email(return_request)
-    messages.success(request, f'Return #{return_id} approved — notification sent to {return_request.user.email}.')
+    messages.success(request, f'Return #{return_id} approved. ₹{refund_amount} refunded to wallet. Notification sent.')
     return redirect('dashboard:admin_dashboard')
 
 

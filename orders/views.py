@@ -59,7 +59,16 @@ def checkout(request):
         except Coupon.DoesNotExist:
             request.session['coupon_id'] = None
 
-    total = subtotal - points_discount - coupon_discount
+    total_before_wallet = subtotal - points_discount - coupon_discount
+    wallet_discount = Decimal('0')
+    wallet_balance = request.user.wallet.balance if hasattr(request.user, 'wallet') else Decimal('0')
+    
+    if request.method == 'POST' and request.POST.get('use_wallet'):
+        if wallet_balance > 0:
+            wallet_discount = min(wallet_balance, total_before_wallet)
+            messages.success(request, f'₹{wallet_discount} applied from your wallet!')
+
+    total = total_before_wallet - wallet_discount
 
     return render(request, 'orders/checkout.html', {
         'items': items,
@@ -69,6 +78,8 @@ def checkout(request):
         'points_discount': points_discount,
         'coupon': coupon,
         'coupon_discount': coupon_discount,
+        'wallet_discount': wallet_discount,
+        'wallet_balance': wallet_balance,
         'discount': points_discount,  # legacy field for place_order hidden input
     })
 
@@ -101,7 +112,16 @@ def place_order(request):
             except Coupon.DoesNotExist:
                 request.session['coupon_id'] = None
 
-        total = subtotal - points_discount - coupon_discount
+        total_before_wallet = subtotal - points_discount - coupon_discount
+        
+        wallet_discount = Decimal('0')
+        use_wallet = request.POST.get('use_wallet')
+        wallet = request.user.wallet if hasattr(request.user, 'wallet') else None
+        
+        if use_wallet and wallet and wallet.balance > 0:
+            wallet_discount = min(wallet.balance, total_before_wallet)
+
+        total = total_before_wallet - wallet_discount
         if total < 0:
             total = Decimal('0')
 
@@ -111,6 +131,18 @@ def place_order(request):
             total_price=total,
             payment_method=payment_method,
         )
+        
+        if wallet_discount > 0:
+            from users.models import WalletTransaction
+            wallet.balance -= wallet_discount
+            wallet.save()
+            WalletTransaction.objects.create(
+                wallet=wallet,
+                amount=wallet_discount,
+                transaction_type='debit',
+                description=f'Paid for Order #{order.id}'
+            )
+
         for item in items:
             OrderItem.objects.create(
                 order=order,
@@ -133,10 +165,10 @@ def place_order(request):
             coupon.mark_used(request.user)
             request.session['coupon_id'] = None
 
-        if payment_method == 'cod':
+        if payment_method == 'cod' or total == 0:
             award_points(request.user, order.total_price, order.id)
             send_order_confirmation_email(order)
-            messages.success(request, 'Order placed successfully! Pay on delivery.')
+            messages.success(request, 'Order placed successfully!')
             return redirect('orders:order_confirmation', order_id=order.id)
         else:
             return redirect('orders:initiate_payment', order_id=order.id)

@@ -214,18 +214,32 @@
     {% if request.user.is_authenticated %}
         {% if not user_has_reviewed %}
             {% if can_review %}
-            <form method="POST" action="{% url 'products:submit_review' product.slug %}" class="mb-4 p-3 border rounded-3 bg-light">
-                {% csrf_token %}
-                <div class="mb-2">
-                    <label class="form-label fw-semibold">Rating</label>
-                    {{ review_form.rating }}
+            <div class="card border-0 shadow-sm mb-4 rounded-4">
+                <div class="card-header bg-white p-3 border-bottom fw-bold">
+                    <i class="fas fa-star text-warning me-2"></i>Write Your Review
                 </div>
-                <div class="mb-2">
-                    <label class="form-label fw-semibold">Comment</label>
-                    {{ review_form.comment }}
+                <div class="card-body p-4">
+                    <form method="POST" action="{% url 'products:submit_review' product.slug %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Rating</label>
+                            {{ review_form.rating }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Your Review</label>
+                            {{ review_form.comment }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-camera me-1 text-muted"></i>Add a Photo <span class="text-muted fw-normal small">(optional)</span>
+                            </label>
+                            <input type="file" name="image" class="form-control" accept="image/*" id="reviewImageInput" onchange="previewReviewImage(this)">
+                            <div id="reviewImagePreview" class="mt-2"></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary px-4"><i class="fas fa-paper-plane me-2"></i>Submit Review</button>
+                    </form>
                 </div>
-                <button type="submit" class="btn btn-primary mt-2">Submit Review</button>
-            </form>
+            </div>
             {% else %}
             <div class="alert alert-secondary d-flex align-items-center mb-4 border-0">
                 <i class="fas fa-lock fs-5 me-3 text-muted"></i>
@@ -233,23 +247,66 @@
             </div>
             {% endif %}
         {% else %}
-        <p class="text-muted">You have already reviewed this product.</p>
+        <p class="text-muted"><i class="fas fa-check-circle text-success me-1"></i>You have already reviewed this product.</p>
         {% endif %}
     {% else %}
         <p class="text-muted"><a href="{% url 'users:login' %}">Login</a> to write a review.</p>
     {% endif %}
 
     {% for review in reviews %}
-    <div class="border-bottom py-3">
-        <div class="d-flex justify-content-between">
-            <strong>{{ review.user.username }}</strong>
-            <span class="text-warning">{{ review.rating }} ★</span>
+    <div class="card border-0 shadow-sm mb-3 rounded-4" id="review-{{ review.id }}">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold" style="width:38px; height:38px; font-size:1rem; flex-shrink:0;">
+                        {{ review.user.username|first|upper }}
+                    </div>
+                    <div>
+                        <strong class="d-block">{{ review.user.username }}</strong>
+                        <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
+                    </div>
+                </div>
+                <div class="text-warning fw-bold fs-5">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= review.rating %}
+                            <i class="fas fa-star"></i>
+                        {% else %}
+                            <i class="far fa-star text-muted"></i>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <p class="mb-3">{{ review.comment }}</p>
+
+            {% if review.image %}
+            <div class="mb-3">
+                <a href="{{ review.image.url }}" target="_blank" title="View full image">
+                    <img src="{{ review.image.url }}" alt="Review photo" class="rounded-3 border" style="max-height: 180px; max-width: 100%; object-fit: cover; cursor: zoom-in;">
+                </a>
+            </div>
+            {% endif %}
+
+            <div class="border-top pt-2 mt-1">
+                {% if request.user.is_authenticated and review.user != request.user %}
+                <button class="btn btn-sm btn-outline-secondary rounded-pill helpful-btn"
+                        data-review-id="{{ review.id }}"
+                        data-url="{% url 'products:vote_review_helpful' review.id %}"
+                        data-csrf="{{ csrf_token }}">
+                    <i class="fas fa-thumbs-up me-1"></i>Helpful
+                    <span class="badge bg-secondary ms-1 helpful-count">{{ review.helpful_votes }}</span>
+                </button>
+                {% else %}
+                <span class="text-muted small"><i class="fas fa-thumbs-up me-1"></i>{{ review.helpful_votes }} found this helpful</span>
+                {% endif %}
+            </div>
         </div>
-        <p class="text-muted small mb-1">{{ review.created_at|date:"M d, Y" }}</p>
-        <p class="mb-0">{{ review.comment }}</p>
     </div>
     {% empty %}
-    <p class="text-muted">No reviews yet — be the first to review this product!</p>
+    <div class="text-center py-5 text-muted">
+        <i class="fas fa-comment-alt mb-3" style="font-size:3rem; opacity:0.3;"></i>
+        <p class="mb-0">No reviews yet — be the first to review this product!</p>
+    </div>
     {% endfor %}
 </div>
 
@@ -437,21 +494,6 @@
 {% endif %}
 
 <script>
-/* ── Social Share Buttons ── */
-(function () {
-    const url     = encodeURIComponent(window.location.href);
-    const title   = encodeURIComponent('{{ product.name|escapejs }} – Check this out on BazaarX!');
-
-    document.getElementById('shareWhatsapp').href  =
-        `https://wa.me/?text=${title}%20${url}`;
-
-    document.getElementById('shareTwitter').href   =
-        `https://twitter.com/intent/tweet?text=${title}&url=${url}`;
-
-    document.getElementById('shareFacebook').href  =
-        `https://www.facebook.com/sharer/sharer.php?u=${url}`;
-})();
-
 function copyProductLink(btn) {
     navigator.clipboard.writeText(window.location.href).then(() => {
         const label = document.getElementById('copyBtnText');
@@ -463,5 +505,50 @@ function copyProductLink(btn) {
         }, 2000);
     });
 }
+</script>
+
+<script>
+// Review Image Preview
+function previewReviewImage(input) {
+    const preview = document.getElementById('reviewImagePreview');
+    preview.innerHTML = '';
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.innerHTML = `<img src="${e.target.result}" class="rounded-3 border mt-1" style="max-height:120px; max-width:100%; object-fit:cover;">`;
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// Helpful Vote via AJAX
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.helpful-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            if (btn.disabled) return;
+            const reviewId = btn.dataset.reviewId;
+            const url = btn.dataset.url;
+            const csrf = btn.dataset.csrf;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrf,
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.helpful_votes !== undefined) {
+                    btn.querySelector('.helpful-count').textContent = data.helpful_votes;
+                    btn.disabled = true;
+                    btn.classList.replace('btn-outline-secondary', 'btn-primary');
+                } else if (data.error) {
+                    btn.title = data.error;
+                }
+            });
+        });
+    });
+});
 </script>
 {% endblock %}

@@ -17,6 +17,7 @@ urlpatterns = [
     path('question/answer/<int:question_id>/', views.answer_question, name='answer_question'),
     path('<slug:slug>/ask/', views.ask_question, name='ask_question'),
     path('questions/', views.admin_questions, name='admin_questions'),
+    path('review/<int:review_id>/helpful/', views.vote_review_helpful, name='vote_review_helpful'),
     
 ]
 

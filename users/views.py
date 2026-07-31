@@ -10,6 +10,8 @@ from .models import PointsHistory
 from .utils import generate_otp, send_otp
 from .models import OTP
 from .models import CustomUser
+from .models import Wallet, WalletTransaction
+
 
 # Imports for Password Reset
 from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
@@ -241,3 +243,12 @@ def password_reset_confirm(request, uidb64, token):
 
 def password_reset_complete(request):
     return render(request, 'users/password_reset_complete.html')
+
+@login_required
+def my_wallet(request):
+    wallet = request.user.wallet
+    transactions = WalletTransaction.objects.filter(wallet=wallet).order_by('-created_at')
+    return render(request, 'users/my_wallet.html', {
+        'wallet': wallet,
+        'transactions': transactions,
+    })

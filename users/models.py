@@ -74,3 +74,35 @@ class OTP(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.otp}"
+
+class Wallet(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
+    def __str__(self):
+        return f"{self.user.username} Wallet - ₹{self.balance}"
+
+class WalletTransaction(models.Model):
+    CREDIT = 'credit'
+    DEBIT = 'debit'
+    TYPE_CHOICES = [
+        (CREDIT, 'Credit'),
+        (DEBIT, 'Debit'),
+    ]
+
+    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    transaction_type = models.CharField(max_length=10, choices=TYPE_CHOICES)
+    description = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.wallet.user.username} - {self.transaction_type} - ₹{self.amount}"
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=CustomUser)
+def create_user_wallet(sender, instance, created, **kwargs):
+    if created:
+        Wallet.objects.create(user=instance)

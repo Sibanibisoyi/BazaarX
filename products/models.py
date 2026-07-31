@@ -77,6 +77,8 @@ class Review(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     rating = models.IntegerField(choices=RATING_CHOICES)
     comment = models.TextField(blank=True, null=True)
+    image = models.ImageField(upload_to='review_images/', blank=True, null=True)
+    helpful_votes = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

@@ -189,10 +189,10 @@
     <!-- Chart & Recent Orders -->
     <div class="row g-4">
         <!-- Sales Chart -->
-        <div class="col-lg-5">
+        <div class="col-lg-8">
             <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-header bg-white p-4 border-bottom-0">
-                    <h5 class="fw-bold mb-0">Revenue Overview</h5>
+                    <h5 class="fw-bold mb-0">Revenue Overview (Last 30 Days)</h5>
                 </div>
                 <div class="card-body px-4 pb-4 pt-0">
                     <canvas id="revenueChart" height="250"></canvas>
@@ -200,14 +200,28 @@
             </div>
         </div>
 
-        <!-- Recent Orders -->
-        <div class="col-lg-7">
+        <!-- Category Pie Chart -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white p-4 border-bottom-0">
+                    <h5 class="fw-bold mb-0">Top Categories</h5>
+                </div>
+                <div class="card-body px-4 pb-4 pt-0 d-flex justify-content-center align-items-center">
+                    <canvas id="categoryChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Orders -->
+    <div class="row g-4 mt-1">
+        <div class="col-12">
             <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-header bg-white p-4 border-bottom-0">
                     <h5 class="fw-bold mb-0">Recent Orders</h5>
                 </div>
                 <div class="card-body p-0">
-                    <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                         <table class="table table-hover align-middle mb-0 text-nowrap">
                             <thead class="table-light sticky-top">
                                 <tr>
@@ -265,7 +279,7 @@
             data: {
                 labels: {{ chart_labels|safe }},
                 datasets: [{
-                    label: 'Orders',
+                    label: 'Revenue (₹)',
                     data: {{ chart_data|safe }},
                     backgroundColor: 'rgba(13, 110, 253, 0.1)',
                     borderColor: 'rgb(13, 110, 253)',
@@ -311,6 +325,42 @@
                             display: false,
                             drawBorder: false
                         }
+                    }
+                }
+            }
+        });
+        
+        // Category Pie Chart
+        const pieCtx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(pieCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ pie_labels|safe }},
+                datasets: [{
+                    data: {{ pie_data|safe }},
+                    backgroundColor: [
+                        '#0d6efd', '#198754', '#ffc107', '#dc3545', '#0dcaf0'
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            font: { family: "'Poppins', sans-serif", size: 12 }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(26, 26, 46, 0.9)',
+                        padding: 10,
+                        cornerRadius: 8
                     }
                 }
             }

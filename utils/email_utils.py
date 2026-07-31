@@ -93,3 +93,16 @@ def send_return_rejected_email(return_request):
     return _send_html_email(
         subject, 'emails/return_rejected.html', context, [return_request.user.email]
     )
+
+
+def send_abandoned_cart_email(cart, coupon=None):
+    subject = "🛒 You left something behind in your BazaarX Cart!"
+    context = {
+        'cart': cart,
+        'items': cart.cartitem_set.all(),
+        'user': cart.user,
+        'coupon': coupon,
+    }
+    return _send_html_email(
+        subject, 'emails/abandoned_cart.html', context, [cart.user.email]
+    )

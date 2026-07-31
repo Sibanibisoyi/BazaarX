@@ -5,6 +5,17 @@ from users.models import Address
 from django.utils import timezone
 from datetime import timedelta
 
+class OrderTracking(models.Model):
+    order = models.ForeignKey('Order', on_delete=models.CASCADE)
+    status = models.CharField(max_length=20)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.order} - {self.status}"
+
 # Create your models here.
 
 STATUS_CHOICES = [
@@ -46,6 +57,46 @@ class Order(models.Model):
         if self.status != 'delivered' or not self.delivered_at:
             return False
         return timezone.now() <= self.return_deadline
+
+    @property
+    def pending_tracked_at(self):
+        tracking = self.ordertracking_set.filter(status='pending').first()
+        return tracking.created_at if tracking else None
+
+    @property
+    def confirmed_tracked_at(self):
+        tracking = self.ordertracking_set.filter(status='confirmed').first()
+        return tracking.created_at if tracking else None
+
+    @property
+    def shipped_tracked_at(self):
+        tracking = self.ordertracking_set.filter(status='shipped').first()
+        return tracking.created_at if tracking else None
+
+    @property
+    def delivered_tracked_at(self):
+        tracking = self.ordertracking_set.filter(status='delivered').first()
+        return tracking.created_at if tracking else None
+
+    @property
+    def cancelled_tracked_at(self):
+        tracking = self.ordertracking_set.filter(status='cancelled').first()
+        return tracking.created_at if tracking else None
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        old_status = None
+        if not is_new:
+            try:
+                old_order = Order.objects.get(pk=self.pk)
+                old_status = old_order.status
+            except Order.DoesNotExist:
+                pass
+        
+        super().save(*args, **kwargs)
+        
+        if is_new or self.status != old_status:
+            OrderTracking.objects.create(order=self, status=self.status)
     
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)

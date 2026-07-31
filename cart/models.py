@@ -5,7 +5,10 @@ from products.models import Product, ProductVariant, CustomUser
 # Create your models here.
 class Cart(models.Model):
     user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add = True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    abandoned_email_sent = models.BooleanField(default=False)
+    
     def __str__(self):
         return f"Cart of {self.user.username}"
     
@@ -37,3 +40,14 @@ class SavedItem(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.product.name}"
+
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+from django.utils import timezone
+
+@receiver([post_save, post_delete], sender=CartItem)
+def update_cart_timestamp(sender, instance, **kwargs):
+    cart = instance.cart
+    cart.updated_at = timezone.now()
+    cart.abandoned_email_sent = False
+    cart.save()

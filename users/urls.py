@@ -21,4 +21,5 @@ urlpatterns = [
     path('reset-password-done/', views.password_reset_done, name='password_reset_done'),
     path('reset-password/<uidb64>/<token>/', views.password_reset_confirm, name='password_reset_confirm'),
     path('reset-password-complete/', views.password_reset_complete, name='password_reset_complete'),
+    path('wallet/', views.my_wallet, name='my_wallet'),
 ]

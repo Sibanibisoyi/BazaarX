@@ -2,7 +2,7 @@ from functools import wraps
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
-from orders.models import Order
+from orders.models import Order, OrderItem
 from products.models import Product, ProductImage, ProductVariant
 from seller.models import Seller
 from returns.models import ReturnRequest
@@ -45,16 +45,24 @@ def admin_dashboard(request):
     pending_sellers = Seller.objects.filter(is_approved=False)
     pending_returns = ReturnRequest.objects.filter(status='pending')
 
-    # Line chart data: Orders per day for the last 30 days
+    # Line chart data: Revenue per day for the last 30 days
     thirty_days_ago = timezone.now() - timedelta(days=30)
-    daily_orders = Order.objects.filter(created_at__gte=thirty_days_ago) \
+    daily_revenue = Order.objects.filter(created_at__gte=thirty_days_ago) \
         .annotate(date=TruncDate('created_at')) \
         .values('date') \
-        .annotate(count=Count('id')) \
+        .annotate(revenue=Sum('total_price')) \
         .order_by('date')
 
-    chart_labels = [entry['date'].strftime('%b %d') if entry['date'] else '' for entry in daily_orders]
-    chart_data = [entry['count'] for entry in daily_orders]
+    chart_labels = [entry['date'].strftime('%b %d') if entry['date'] else '' for entry in daily_revenue]
+    chart_data = [float(entry['revenue'] or 0) for entry in daily_revenue]
+
+    # Pie chart data: Top 5 selling categories
+    top_categories = OrderItem.objects.values('product__category__name') \
+        .annotate(total_sold=Sum('quantity')) \
+        .order_by('-total_sold')[:5]
+        
+    pie_labels = [entry['product__category__name'] or 'Uncategorized' for entry in top_categories]
+    pie_data = [entry['total_sold'] for entry in top_categories]
 
     return render(request, 'dashboard/admin_dashboard.html', {
         'total_orders': total_orders,
@@ -66,6 +74,8 @@ def admin_dashboard(request):
         'pending_returns': pending_returns,
         'chart_labels': chart_labels,
         'chart_data': chart_data,
+        'pie_labels': pie_labels,
+        'pie_data': pie_data,
     })
 
 
