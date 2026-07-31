@@ -5,7 +5,9 @@ cffi==2.0.0
 charset-normalizer==3.4.7
 cloudinary==1.44.2
 crispy-bootstrap5==2026.3
+cryptography==49.0.0
 cssselect2==0.9.0
+dj-database-url==3.1.2
 Django==6.0.6
 django-allauth==65.18.0
 django-cloudinary-storage==0.3.0
@@ -18,6 +20,7 @@ packaging==26.2
 pillow==12.2.0
 pycparser==3.0
 pydyf==0.12.1
+PyJWT==2.13.0
 pyphen==0.17.2
 python-decouple==3.8
 razorpay==2.0.1
@@ -30,4 +33,5 @@ tinyhtml5==2.1.0
 urllib3==2.7.0
 weasyprint==69.0
 webencodings==0.5.1
+whitenoise==6.12.0
 zopfli==0.4.3
