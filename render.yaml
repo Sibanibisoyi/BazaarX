@@ -2,10 +2,10 @@ services:
   - type: web
     name: bazaarx
     env: python
-    region: singapore   # closest to India
+    region: singapore
     plan: free
-    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate"
-    startCommand: "gunicorn bazarx.wsgi:application --bind 0.0.0.0:$PORT"
+    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --noinput"
+    startCommand: "python manage.py migrate && gunicorn bazarx.wsgi:application --bind 0.0.0.0:$PORT"
     envVars:
       - key: SECRET_KEY
         generateValue: true
@@ -39,3 +39,4 @@ databases:
     databaseName: bazaarx
     user: bazaarx
     plan: free
+

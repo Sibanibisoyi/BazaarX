@@ -223,7 +223,7 @@ STORAGES = {
         "BACKEND": CLOUDINARY_DEFAULT_BACKEND,
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": "whitenoise.storage.StaticFilesStorage",
     },
 }
 
