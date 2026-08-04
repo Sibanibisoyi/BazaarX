@@ -15,7 +15,7 @@ django-crispy-forms==2.6
 fonttools==4.63.0
 gunicorn==26.0.0
 idna==3.18
-mysqlclient==2.2.8
+psycopg2-binary==2.9.10
 packaging==26.2
 pillow==12.2.0
 pycparser==3.0
