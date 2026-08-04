@@ -52,6 +52,41 @@ def flash_sale(request):
     })
 
 
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from .models import Notification
+
+@login_required
+def notifications_list(request):
+    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')
+    
+    from django.core.paginator import Paginator
+    paginator = Paginator(notifications, 15)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'extras/notifications.html', {
+        'page_obj': page_obj,
+        'notifications': page_obj,
+    })
+
+@login_required
+@require_POST
+def mark_notification_read(request, notification_id):
+    notification = get_object_or_404(Notification, id=notification_id, user=request.user)
+    notification.is_read = True
+    notification.save()
+    
+    unread_count = Notification.objects.filter(user=request.user, is_read=False).count()
+    return JsonResponse({'status': 'success', 'unread_count': unread_count})
+
+@login_required
+@require_POST
+def mark_all_notifications_read(request):
+    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    return JsonResponse({'status': 'success', 'unread_count': 0})
+
+
 
 
 

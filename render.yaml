@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: bazaarx
+    env: python
+    region: singapore   # closest to India
+    plan: free
+    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate"
+    startCommand: "gunicorn bazarx.wsgi:application --bind 0.0.0.0:$PORT"
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: "bazaarx.onrender.com"
+      - key: CSRF_TRUSTED_ORIGINS
+        value: "https://bazaarx.onrender.com"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bazaarx-db
+          property: connectionString
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+
+databases:
+  - name: bazaarx-db
+    databaseName: bazaarx
+    user: bazaarx
+    plan: free

@@ -97,6 +97,41 @@ class Order(models.Model):
         
         if is_new or self.status != old_status:
             OrderTracking.objects.create(order=self, status=self.status)
+            try:
+                from extras.models import Notification
+                if self.status == 'pending':
+                    Notification.objects.create(
+                        user=self.user,
+                        message=f"Your order #{self.id} has been placed successfully.",
+                        notification_type='order'
+                    )
+                elif self.status == 'confirmed':
+                    Notification.objects.create(
+                        user=self.user,
+                        message=f"Your order #{self.id} has been confirmed and is being processed.",
+                        notification_type='order'
+                    )
+                elif self.status == 'shipped':
+                    Notification.objects.create(
+                        user=self.user,
+                        message=f"Your order #{self.id} has been shipped. It's on its way!",
+                        notification_type='order'
+                    )
+                elif self.status == 'delivered':
+                    Notification.objects.create(
+                        user=self.user,
+                        message=f"Your order #{self.id} has been delivered. Thank you for shopping with BazaarX!",
+                        notification_type='order'
+                    )
+                elif self.status == 'cancelled':
+                    reason_str = f" Reason: {self.cancellation_reason}" if self.cancellation_reason else ""
+                    Notification.objects.create(
+                        user=self.user,
+                        message=f"Your order #{self.id} has been cancelled.{reason_str}",
+                        notification_type='order'
+                    )
+            except Exception:
+                pass
     
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
@@ -104,6 +139,14 @@ class OrderItem(models.Model):
     variant = models.ForeignKey(ProductVariant, on_delete=models.SET_NULL, null=True, blank=True)
     quantity = models.IntegerField(default=1)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    shipping_status = models.CharField(max_length=20, choices=[
+        ('pending', 'Pending'),
+        ('shipped', 'Shipped'),
+        ('delivered', 'Delivered'),
+    ], default='pending')
+    tracking_number = models.CharField(max_length=100, blank=True, default='')
+    shipped_at = models.DateTimeField(null=True, blank=True)
+
     def __str__(self):
         variant_str = f' [{self.variant.name}: {self.variant.value}]' if self.variant else ''
         return f"{self.quantity} * {self.product.name}{variant_str}"

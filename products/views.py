@@ -100,23 +100,90 @@ def product_detail(request, slug):
     })
 
 def search(request):
-    query = request.GET.get('q', '')
+    query = request.GET.get('q', '').strip()
     category_slug = request.GET.get('category')
-    
+    min_price = request.GET.get('min_price')
+    max_price = request.GET.get('max_price')
+    min_rating = request.GET.get('min_rating')
+    in_stock = request.GET.get('in_stock')
+    sort_by = request.GET.get('sort_by')
+
     products = Product.objects.filter(is_active=True)
     if query:
         products = products.filter(Q(name__icontains=query) | Q(description__icontains=query))
+    
+    # Filter by category
     if category_slug:
         products = products.filter(category__slug=category_slug)
 
+    # Filter by price
+    if min_price:
+        try:
+            products = products.filter(price__gte=float(min_price))
+        except ValueError:
+            pass
+    if max_price:
+        try:
+            products = products.filter(price__lte=float(max_price))
+        except ValueError:
+            pass
+
+    # Filter by stock
+    if in_stock == 'true' or in_stock == '1':
+        products = products.filter(stock__gt=0)
+
+    # Filter by rating
+    if min_rating:
+        try:
+            rating_val = float(min_rating)
+            products = products.annotate(avg_rating=Avg('review__rating')).filter(avg_rating__gte=rating_val)
+        except ValueError:
+            pass
+
+    # Sorting
+    if sort_by == 'price_low':
+        products = products.order_by('price')
+    elif sort_by == 'price_high':
+        products = products.order_by('-price')
+    elif sort_by == 'newest':
+        products = products.order_by('-created_at')
+    elif sort_by == 'rating':
+        if not min_rating:
+            products = products.annotate(avg_rating=Avg('review__rating'))
+        products = products.order_by('-avg_rating')
+    else:
+        products = products.order_by('-id')
+
+    categories = Category.objects.all().order_by('name')
+    
     paginator = Paginator(products, 12)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('ajax') == '1':
+        html = render_to_string('products/partials/search_results.html', {
+            'products': page_obj,
+            'page_obj': page_obj,
+            'query': query,
+        }, request=request)
+        return JsonResponse({
+            'html': html,
+            'count': products.count(),
+            'has_next': page_obj.has_next(),
+            'next_page': page_obj.next_page_number() if page_obj.has_next() else None,
+        })
         
     return render(request, 'products/search.html', {
         'products': page_obj,
         'page_obj': page_obj,
         'query': query,
+        'categories': categories,
+        'selected_category_slug': category_slug,
+        'min_price': min_price,
+        'max_price': max_price,
+        'min_rating': min_rating,
+        'in_stock': in_stock,
+        'sort_by': sort_by,
     })
 
 def add_to_compare(request, product_id):

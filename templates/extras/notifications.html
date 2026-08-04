@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Notifications | BazaarX{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-2 border-bottom">
+        <div class="d-flex align-items-center mb-3 mb-md-0">
+            <i class="fas fa-bell fs-3 text-primary-custom me-3"></i>
+            <h2 class="mb-0 fw-bold">My Notifications</h2>
+            {% if unread_notifications_count %}
+            <span id="notificationsPageBadge" class="badge bg-danger ms-3 rounded-pill">{{ unread_notifications_count }} New</span>
+            {% endif %}
+        </div>
+        {% if unread_notifications_count %}
+        <button id="markAllReadPageBtn" class="btn btn-outline-primary fw-semibold rounded-pill px-4 shadow-sm">
+            <i class="fas fa-check-double me-2"></i>Mark All as Read
+        </button>
+        {% endif %}
+    </div>
+
+    {% if page_obj %}
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="list-group list-group-flush rounded-4 overflow-hidden" id="notificationsPageList">
+            {% for notification in page_obj %}
+            <div class="list-group-item p-4 transition-all {% if not notification.is_read %}bg-light border-start border-primary-custom border-3{% else %}border-start border-transparent border-3{% endif %}" id="notif-row-{{ notification.id }}">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="d-flex gap-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" 
+                             style="width: 48px; height: 48px; background: {% if not notification.is_read %}#fff0e6{% else %}#f3f4f6{% endif %};">
+                            {% if notification.notification_type == 'order' %}
+                                <i class="fas fa-box text-primary-custom fs-5"></i>
+                            {% elif notification.notification_type == 'return' %}
+                                <i class="fas fa-rotate-left text-warning fs-5"></i>
+                            {% elif notification.notification_type == 'promo' %}
+                                <i class="fas fa-tags text-success fs-5"></i>
+                            {% else %}
+                                <i class="fas fa-bell text-secondary fs-5"></i>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <p class="mb-1 text-dark {% if not notification.is_read %}fw-semibold{% endif %}" style="font-size: 0.95rem;">
+                                {{ notification.message }}
+                            </p>
+                            <span class="text-muted small">
+                                <i class="far fa-clock me-1"></i>{{ notification.created_at|timesince }} ago
+                            </span>
+                        </div>
+                    </div>
+                    {% if not notification.is_read %}
+                    <button class="btn btn-sm btn-link text-primary-custom p-0 text-decoration-none mark-read-page-btn" data-id="{{ notification.id }}" style="font-size: 0.85rem; font-weight: 600;">
+                        Mark Read
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav aria-label="Notifications pagination" class="mt-4">
+        <ul class="pagination justify-content-center gap-1">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link rounded-3 border-0 shadow-sm px-3" href="?page={{ page_obj.previous_page_number }}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link rounded-3 border-0 shadow-sm px-3">{{ num }}</span>
+                    </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link rounded-3 border-0 shadow-sm px-3" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link rounded-3 border-0 shadow-sm px-3" href="?page={{ page_obj.next_page_number }}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-5 bg-white rounded shadow-sm border mt-4">
+        <div class="d-inline-flex align-items-center justify-content-center bg-light rounded-circle mb-4" style="width: 120px; height: 120px;">
+            <i class="far fa-bell-slash fs-1 text-muted opacity-50"></i>
+        </div>
+        <h3 class="fw-bold mb-3">No notifications</h3>
+        <p class="text-muted mb-4 mx-auto" style="max-width: 400px;">We'll update you here when your orders change status or when we have offers just for you.</p>
+        <a href="{% url 'products:home' %}" class="btn btn-primary px-5 py-3 rounded-pill fw-bold shadow-sm">
+            Continue Shopping
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    // Mark single notification as read on the page
+    document.querySelectorAll('.mark-read-page-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const id = this.getAttribute('data-id');
+            const row = document.getElementById(`notif-row-${id}`);
+            const btn = this;
+
+            fetch(`/extras/notifications/mark-read/${id}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    if (row) {
+                        row.classList.remove('bg-light');
+                        row.classList.remove('border-primary-custom');
+                        row.classList.add('border-transparent');
+                        const text = row.querySelector('.text-dark');
+                        if (text) text.classList.remove('fw-semibold');
+                    }
+                    btn.remove();
+                    
+                    // Update badges
+                    const badge = document.getElementById('notificationsPageBadge');
+                    const navBadge = document.getElementById('notificationBadge');
+                    if (data.unread_count > 0) {
+                        if (badge) badge.textContent = `${data.unread_count} New`;
+                        if (navBadge) {
+                            navBadge.textContent = data.unread_count;
+                            navBadge.style.display = 'block';
+                        }
+                    } else {
+                        if (badge) badge.remove();
+                        if (navBadge) navBadge.style.display = 'none';
+                        const markAllBtn = document.getElementById('markAllReadPageBtn');
+                        if (markAllBtn) markAllBtn.remove();
+                    }
+                }
+            });
+        });
+    });
+
+    // Mark all notifications read on the page
+    const markAllBtn = document.getElementById('markAllReadPageBtn');
+    if (markAllBtn) {
+        markAllBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            fetch('/extras/notifications/mark-all-read/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.querySelectorAll('.list-group-item').forEach(row => {
+                        row.classList.remove('bg-light');
+                        row.classList.remove('border-primary-custom');
+                        row.classList.add('border-transparent');
+                        const text = row.querySelector('.text-dark');
+                        if (text) text.classList.remove('fw-semibold');
+                    });
+                    document.querySelectorAll('.mark-read-page-btn').forEach(btn => btn.remove());
+                    
+                    const badge = document.getElementById('notificationsPageBadge');
+                    if (badge) badge.remove();
+                    
+                    const navBadge = document.getElementById('notificationBadge');
+                    if (navBadge) navBadge.style.display = 'none';
+                    
+                    markAllBtn.remove();
+                }
+            });
+        });
+    }
+});
+</script>
+
+<style>
+.transition-all {
+    transition: all 0.2s ease;
+}
+.border-transparent {
+    border-left-color: transparent !important;
+}
+</style>
+{% endblock %}

@@ -1,32 +1,92 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Seller Order Management | BazaarX{% endblock %}
 
 {% block content %}
-<h2 class="mb-4">My Orders</h2>
+<div class="container mt-4 mb-5">
+    
+    <!-- Header -->
+    <div class="d-flex align-items-center mb-4 pb-2 border-bottom">
+        <i class="fas fa-boxes fs-3 text-primary-custom me-3"></i>
+        <h2 class="mb-0 fw-bold">Seller Orders</h2>
+        <span class="badge bg-secondary ms-3 rounded-pill">{{ orders|length }} Orders</span>
+    </div>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Order ID</th>
-            <th>Product</th>
-            <th>Quantity</th>
-            <th>Price</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for item in order_items %}
-        <tr>
-            <td>#{{ item.order.id }}</td>
-            <td>{{ item.product.name }}</td>
-            <td>{{ item.quantity }}</td>
-            <td>₹{{ item.price }}</td>
-            <td>{{ item.order.status }}</td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="5">No orders yet</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    <!-- Back to Dashboard -->
+    <div class="mb-4">
+        <a href="{% url 'seller:seller_dashboard' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+            <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+        </a>
+    </div>
+
+    {% if orders %}
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" style="font-size: 0.92rem;">
+                <thead class="bg-light text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                    <tr>
+                        <th class="ps-4 py-3">Order ID</th>
+                        <th class="py-3">Date</th>
+                        <th class="py-3 text-center">Your Items</th>
+                        <th class="py-3">Seller Revenue</th>
+                        <th class="py-3">Overall Status</th>
+                        <th class="py-3 text-end pe-4">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td class="ps-4 fw-bold text-dark">
+                            #{{ order.id }}
+                        </td>
+                        <td class="text-muted">
+                            {{ order.created_at|date:"M d, Y h:i A" }}
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-secondary bg-opacity-10 text-dark border px-3 py-1.5 rounded-pill">
+                                {{ order.seller_items_count }}
+                            </span>
+                        </td>
+                        <td class="fw-semibold text-dark">
+                            ₹{{ order.seller_total_price }}
+                        </td>
+                        <td>
+                            {% if order.status == 'pending' %}
+                                <span class="badge bg-warning bg-opacity-10 text-warning border px-2.5 py-1.5 rounded">Pending</span>
+                            {% elif order.status == 'confirmed' %}
+                                <span class="badge bg-info bg-opacity-10 text-info border px-2.5 py-1.5 rounded">Confirmed</span>
+                            {% elif order.status == 'shipped' %}
+                                <span class="badge bg-primary bg-opacity-10 text-primary border px-2.5 py-1.5 rounded">Shipped</span>
+                            {% elif order.status == 'delivered' %}
+                                <span class="badge bg-success bg-opacity-10 text-success border px-2.5 py-1.5 rounded">Delivered</span>
+                            {% elif order.status == 'cancelled' %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger border px-2.5 py-1.5 rounded">Cancelled</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="{% url 'seller:seller_order_detail' order.id %}" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm">
+                                <i class="fas fa-eye me-1"></i> Manage Order
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-5 bg-white rounded shadow-sm border mt-4">
+        <div class="d-inline-flex align-items-center justify-content-center bg-light rounded-circle mb-4" style="width: 120px; height: 120px;">
+            <i class="fas fa-inbox fs-1 text-muted opacity-50"></i>
+        </div>
+        <h3 class="fw-bold mb-3">No orders found</h3>
+        <p class="text-muted mb-4 mx-auto" style="max-width: 400px;">When customers purchase products from your shop, their orders will appear here for fulfillment.</p>
+        <a href="{% url 'seller:seller_dashboard' %}" class="btn btn-primary px-5 py-3 rounded-pill fw-bold shadow-sm">
+            Seller Dashboard
+        </a>
+    </div>
+    {% endif %}
+
+</div>
 {% endblock %}

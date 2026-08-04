@@ -97,9 +97,68 @@ def delete_product(request, product_id):
 
 @login_required
 def seller_orders(request):
-    order_items = OrderItem.objects.filter(
-        product__seller=request.user).order_by('-order__created_at')
+    seller = get_object_or_404(Seller, user=request.user)
+    orders = Order.objects.filter(orderitem__product__seller=request.user).distinct().order_by('-created_at')
+    
+    for order in orders:
+        order.seller_items_count = order.orderitem_set.filter(product__seller=request.user).count()
+        order.seller_total_price = sum(item.price * item.quantity for item in order.orderitem_set.filter(product__seller=request.user))
+        
+    return render(request, 'seller/orders.html', {
+        'orders': orders,
+        'seller': seller,
+    })
 
-    return render(request, 'seller/orders.html', {'order_items': order_items})
+@login_required
+def seller_order_detail(request, order_id):
+    seller = get_object_or_404(Seller, user=request.user)
+    order = get_object_or_404(Order, id=order_id)
+    items = order.orderitem_set.filter(product__seller=request.user).select_related('product', 'variant')
+    
+    if not items.exists():
+        messages.error(request, "This order does not contain products from your shop.")
+        return redirect('seller:seller_orders')
+        
+    return render(request, 'seller/order_detail.html', {
+        'order': order,
+        'items': items,
+        'seller': seller,
+    })
+
+@login_required
+def ship_order_item(request, item_id):
+    seller = get_object_or_404(Seller, user=request.user)
+    item = get_object_or_404(OrderItem, id=item_id, product__seller=request.user)
+    
+    if request.method == 'POST':
+        tracking_number = request.POST.get('tracking_number', '').strip()
+        if not tracking_number:
+            messages.error(request, "Please enter a tracking number.")
+            return redirect('seller:seller_order_detail', order_id=item.order.id)
+            
+        item.shipping_status = 'shipped'
+        item.tracking_number = tracking_number
+        from django.utils import timezone
+        item.shipped_at = timezone.now()
+        item.save()
+        
+        # Notify the buyer
+        from extras.models import Notification
+        Notification.objects.create(
+            user=item.order.user,
+            message=f"Item '{item.product.name}' from your Order #{item.order.id} has been shipped! Tracking ID: {tracking_number}.",
+            notification_type='order'
+        )
+        
+        # Check if all items in this order are now shipped
+        order = item.order
+        all_shipped = not order.orderitem_set.exclude(shipping_status='shipped').exists()
+        if all_shipped and order.status in ['pending', 'confirmed']:
+            order.status = 'shipped'
+            order.save()
+            
+        messages.success(request, f"Item '{item.product.name}' has been marked as shipped.")
+    
+    return redirect('seller:seller_order_detail', order_id=item.order.id)
 
 

@@ -19,6 +19,36 @@ class ReturnRequest(models.Model):
     def __str__(self):
         return f"Return for Order #{self.order.id}"
 
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        old_status = None
+        if not is_new:
+            try:
+                old_req = ReturnRequest.objects.get(pk=self.pk)
+                old_status = old_req.status
+            except ReturnRequest.DoesNotExist:
+                pass
+        
+        super().save(*args, **kwargs)
+        
+        if not is_new and self.status != old_status:
+            try:
+                from extras.models import Notification
+                if self.status == 'approved':
+                    Notification.objects.create(
+                        user=self.user,
+                        message=f"Your return request for Order #{self.order.id} has been approved. Refund of ₹{self.order.total_price} credited to your wallet.",
+                        notification_type='return'
+                    )
+                elif self.status == 'rejected':
+                    Notification.objects.create(
+                        user=self.user,
+                        message=f"Your return request for Order #{self.order.id} has been rejected.",
+                        notification_type='return'
+                    )
+            except Exception:
+                pass
+
 
 
     
