@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'cloudinary',
-    'cloudinary_storage',
     'django.contrib.staticfiles',
     'crispy_forms',
     'crispy_bootstrap5',
@@ -189,19 +188,15 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME', default=''),
-    'API_KEY': config('CLOUDINARY_API_KEY', default=''),
-    'API_SECRET': config('CLOUDINARY_API_SECRET', default=''),
-}
-
-# Use Cloudinary for media in production, local for development
-if config('CLOUDINARY_CLOUD_NAME', default=''):
-    CLOUDINARY_DEFAULT_BACKEND = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-else:
-    CLOUDINARY_DEFAULT_BACKEND = 'django.core.files.storage.FileSystemStorage'
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# Configure Cloudinary directly
+import cloudinary
+cloudinary.config(
+    cloud_name=config('CLOUDINARY_CLOUD_NAME', default=''),
+    api_key=config('CLOUDINARY_API_KEY', default=''),
+    api_secret=config('CLOUDINARY_API_SECRET', default=''),
+)
 MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 AUTH_USER_MODEL = 'users.CustomUser'
 
 RAZORPAY_KEY_ID = config('RAZORPAY_KEY_ID', default='')
@@ -220,7 +215,7 @@ import os
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STORAGES = {
     "default": {
-        "BACKEND": CLOUDINARY_DEFAULT_BACKEND,
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.StaticFilesStorage",
