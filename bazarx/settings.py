@@ -197,11 +197,11 @@ CLOUDINARY_STORAGE = {
 
 # Use Cloudinary for media in production, local for development
 if config('CLOUDINARY_CLOUD_NAME', default=''):
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    MEDIA_URL = '/media/'
+    CLOUDINARY_DEFAULT_BACKEND = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 else:
-    MEDIA_URL = '/media/'
+    CLOUDINARY_DEFAULT_BACKEND = 'django.core.files.storage.FileSystemStorage'
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 AUTH_USER_MODEL = 'users.CustomUser'
 
 RAZORPAY_KEY_ID = config('RAZORPAY_KEY_ID', default='')
@@ -218,7 +218,14 @@ DEFAULT_FROM_EMAIL = config('EMAIL_HOST_USER', default='')
 
 import os
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+STORAGES = {
+    "default": {
+        "BACKEND": CLOUDINARY_DEFAULT_BACKEND,
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 import os
 PORT = os.environ.get('PORT', 8000)
