@@ -258,6 +258,11 @@
     }
 
     function submitOrder() {
+        const btn = document.getElementById('place-order-btn');
+        if (btn.disabled) return;
+        btn.disabled = true;
+        document.getElementById('btn-label').textContent = 'Processing...';
+
         const form = document.getElementById('checkoutForm');
         form.action = "{% url 'orders:place_order' %}";
         form.submit();

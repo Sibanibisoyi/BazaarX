@@ -85,7 +85,7 @@ def approve_seller(request, seller_id):
     seller.is_approved = True
     seller.save()
     messages.success(request, 'Seller approved successfully.')
-    return redirect('dashboard:admin_dashboard')
+    return redirect('dashboard:admin_sellers')
 
 
 def admin_login(request):
@@ -353,3 +353,15 @@ def delete_product_image(request, image_id):
     image.delete()
     messages.success(request, 'Image deleted.')
     return redirect('dashboard:admin_edit_product', product_id=image.product.id)
+
+
+@staff_required
+def admin_sellers(request):
+    sellers = Seller.objects.all().order_by('-id')
+    return render(request, 'dashboard/sellers/seller_list.html', {'sellers': sellers})
+
+
+@staff_required
+def admin_returns(request):
+    returns = ReturnRequest.objects.all().order_by('-id')
+    return render(request, 'dashboard/returns/return_list.html', {'returns': returns})

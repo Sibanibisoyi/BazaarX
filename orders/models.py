@@ -24,6 +24,7 @@ STATUS_CHOICES = [
     ('shipped', 'Shipped'),
     ('delivered', 'Delivered'),
     ('cancelled', 'Cancelled'),
+    ('returned', 'Returned'),
 ]
 PAYMENT_METHOD_CHOICES = [
     ('razorpay', 'Online Payment (Razorpay)'),
@@ -150,3 +151,6 @@ class OrderItem(models.Model):
     def __str__(self):
         variant_str = f' [{self.variant.name}: {self.variant.value}]' if self.variant else ''
         return f"{self.quantity} * {self.product.name}{variant_str}"
+
+    def get_cost(self):
+        return self.price * self.quantity

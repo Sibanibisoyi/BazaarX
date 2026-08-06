@@ -19,7 +19,7 @@
             <tr>
                 <td>#{{ order.id }}</td>
                 <td>{{ order.user.username }}</td>
-                <td>${{ order.total_price }}</td>
+                <td>₹{{ order.total_price }}</td>
                 <td><span class="badge bg-secondary">{{ order.status }}</span></td>
                 <td>{{ order.created_at|date:"M d, Y H:i" }}</td>
                 <td>

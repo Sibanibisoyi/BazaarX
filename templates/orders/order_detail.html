@@ -88,34 +88,150 @@
                 </div>
                 <div class="p-0">
                     {% for item in items %}
-                    <div class="d-flex align-items-center p-3 border-bottom position-relative">
-                        <div class="border rounded p-2 text-center bg-white me-3" style="width: 80px; height: 80px; min-width: 80px;">
-                            {% if item.product.image %}
-                                <img src="{{ item.product.image.url }}" class="img-fluid" style="max-height: 100%; object-fit: contain;">
-                            {% else %}
-                                <img src="https://placehold.co/80x80/eeeeee/999999?text=Img" class="img-fluid">
-                            {% endif %}
-                        </div>
-                        <div class="flex-grow-1">
-                            <a href="{% url 'products:product_detail' item.product.slug %}" class="text-decoration-none text-dark fw-bold hover-primary d-block mb-1 line-clamp-2">
-                                {{ item.product.name }}
-                            </a>
-                            <div class="d-flex flex-wrap gap-2 align-items-center mb-1">
-                                {% if item.variant %}
-                                <span class="badge" style="background:#fff3e0; color:#e65c00; border:1px solid #ffcc99;">
-                                    <i class="fas fa-ruler me-1"></i>{{ item.variant.name }}: {{ item.variant.value }}
-                                </span>
+                    <div class="border-bottom">
+                        <!-- Item Row -->
+                        <div class="d-flex align-items-center p-3 position-relative">
+                            <div class="border rounded p-2 text-center bg-white me-3" style="width: 80px; height: 80px; min-width: 80px;">
+                                {% if item.product.image %}
+                                    <img src="{{ item.product.image.url }}" class="img-fluid" style="max-height: 100%; object-fit: contain;">
+                                {% else %}
+                                    <img src="https://placehold.co/80x80/eeeeee/999999?text=Img" class="img-fluid">
                                 {% endif %}
                             </div>
-                            <div class="d-flex flex-wrap gap-3 text-muted small">
-                                <span><span class="text-dark fw-medium">Seller:</span> {{ item.product.seller.username }}</span>
-                                <span><span class="text-dark fw-medium">Price:</span> ₹{{ item.price }}</span>
-                                <span><span class="text-dark fw-medium">Qty:</span> {{ item.quantity }}</span>
+                            <div class="flex-grow-1">
+                                <a href="{% url 'products:product_detail' item.product.slug %}" class="text-decoration-none text-dark fw-bold hover-primary d-block mb-1 line-clamp-2">
+                                    {{ item.product.name }}
+                                </a>
+                                <div class="d-flex flex-wrap gap-2 align-items-center mb-1">
+                                    {% if item.variant %}
+                                    <span class="badge" style="background:#fff3e0; color:#e65c00; border:1px solid #ffcc99;">
+                                        <i class="fas fa-ruler me-1"></i>{{ item.variant.name }}: {{ item.variant.value }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                <div class="d-flex flex-wrap gap-3 text-muted small">
+                                    <span><span class="text-dark fw-medium">Seller:</span> {{ item.product.seller.username }}</span>
+                                    <span><span class="text-dark fw-medium">Price:</span> ₹{{ item.price }}</span>
+                                    <span><span class="text-dark fw-medium">Qty:</span> {{ item.quantity }}</span>
+                                </div>
+                            </div>
+                            <div class="ms-3 text-end">
+                                <h5 class="fw-bold text-danger mb-0">₹<script>document.write({{ item.price }} * {{ item.quantity }})</script></h5>
                             </div>
                         </div>
-                        <div class="ms-3 text-end">
-                            <h5 class="fw-bold text-danger mb-0">₹<script>document.write({{ item.price }} * {{ item.quantity }})</script></h5>
+
+                        <!-- Rate & Review (Delivered orders only) -->
+                        {% if order.status == 'delivered' %}
+                        <div class="px-3 pb-3">
+                            {% with review=reviews_by_product|default_if_none:None %}
+                            {% with existing=reviews_by_product %}
+                            {% if existing %}
+                                {% with r=existing|default_if_none:None %}
+                                {% endwith %}
+                            {% endif %}
+                            {% endwith %}
+                            {% endwith %}
+
+                            {% with existing_review=reviews_by_product %}
+                            {# Check if user already reviewed this item #}
+                            {% if item.product.id in reviews_by_product %}
+                                {% with r=reviews_by_product|default_if_none:None %}
+                                {% endwith %}
+                            {% endif %}
+                            {% endwith %}
+
+                            {# Use a template variable trick to get the per-product review #}
+                            {% for pid, r in reviews_by_product.items %}
+                                {% if pid == item.product.id %}
+                                    {% if r %}
+                                    <!-- Already Reviewed -->
+                                    <div class="d-flex align-items-start gap-3 bg-light rounded-3 p-3 mt-2">
+                                        <div class="flex-shrink-0">
+                                            <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width:36px;height:36px;">
+                                                {{ request.user.username|first|upper }}
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-center gap-2 mb-1">
+                                                <strong class="text-dark">Your Review</strong>
+                                                <span class="badge bg-success-subtle text-success border border-success border-opacity-25 px-2 rounded-pill" style="font-size:0.75rem;">
+                                                    <i class="fas fa-check me-1"></i> Submitted
+                                                </span>
+                                            </div>
+                                            <div class="text-warning mb-1">
+                                                {% for i in "12345" %}
+                                                    {% if forloop.counter <= r.rating %}
+                                                        <i class="fas fa-star"></i>
+                                                    {% else %}
+                                                        <i class="far fa-star"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                                <span class="text-muted small ms-1">{{ r.rating }}/5</span>
+                                            </div>
+                                            <p class="mb-0 text-muted small">{{ r.comment }}</p>
+                                            {% if r.image %}
+                                            <img src="{{ r.image.url }}" class="mt-2 rounded" style="max-height:80px; max-width:120px; object-fit:cover;">
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <!-- Review Form -->
+                                    <div class="mt-2">
+                                        <button class="btn btn-sm btn-outline-primary rounded-pill px-4 fw-semibold"
+                                                type="button"
+                                                data-bs-toggle="collapse"
+                                                data-bs-target="#reviewForm{{ item.product.id }}"
+                                                aria-expanded="false">
+                                            <i class="fas fa-star me-1 text-warning"></i> Rate & Review
+                                        </button>
+                                        <div class="collapse mt-3" id="reviewForm{{ item.product.id }}">
+                                            <div class="card border-0 bg-light rounded-3 p-3">
+                                                <h6 class="fw-bold mb-3">
+                                                    <i class="fas fa-pen-alt text-primary me-2"></i>Write a Review for <span class="text-primary">{{ item.product.name }}</span>
+                                                </h6>
+                                                <form method="post" action="{% url 'products:submit_review' item.product.slug %}" enctype="multipart/form-data">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="order_id" value="{{ order.id }}">
+
+                                                    <!-- Star Rating -->
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold small text-muted text-uppercase">Your Rating</label>
+                                                        <div class="star-picker d-flex gap-2" id="stars-{{ item.product.id }}">
+                                                            {% for i in "12345" %}
+                                                            <label class="star-label" title="{{ forloop.counter }} Star">
+                                                                <input type="radio" name="rating" value="{{ forloop.counter }}" required class="d-none">
+                                                                <i class="far fa-star fs-4" style="cursor:pointer; color:#ffc107; transition:transform 0.1s;"></i>
+                                                            </label>
+                                                            {% endfor %}
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Comment -->
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold small text-muted text-uppercase">Your Review</label>
+                                                        <textarea name="comment" rows="3" class="form-control border-0 shadow-sm" placeholder="Describe your experience with this product..." required></textarea>
+                                                    </div>
+
+                                                    <!-- Photo -->
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold small text-muted text-uppercase">
+                                                            <i class="fas fa-camera me-1"></i> Add a Photo (optional)
+                                                        </label>
+                                                        <input type="file" name="image" accept="image/*" class="form-control border-0 shadow-sm">
+                                                    </div>
+
+                                                    <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">
+                                                        <i class="fas fa-paper-plane me-2"></i> Submit Review
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
                         </div>
+                        {% endif %}
                     </div>
                     {% endfor %}
                 </div>
@@ -232,4 +348,36 @@
         </div>
     </div>
 </div>
+
+<script>
+// Interactive star picker for review forms
+document.querySelectorAll('.star-picker').forEach(function(picker) {
+    const labels = picker.querySelectorAll('.star-label');
+    labels.forEach(function(label, idx) {
+        const star = label.querySelector('i');
+        label.addEventListener('mouseenter', function() {
+            labels.forEach(function(l, i) {
+                l.querySelector('i').classList.toggle('fas', i <= idx);
+                l.querySelector('i').classList.toggle('far', i > idx);
+            });
+        });
+        label.addEventListener('click', function() {
+            labels.forEach(function(l, i) {
+                l.querySelector('i').classList.toggle('fas', i <= idx);
+                l.querySelector('i').classList.toggle('far', i > idx);
+                if (i === idx) l.querySelector('i').style.transform = 'scale(1.3)';
+                else l.querySelector('i').style.transform = 'scale(1)';
+            });
+        });
+    });
+    picker.addEventListener('mouseleave', function() {
+        const checked = picker.querySelector('input[type=radio]:checked');
+        const checkedIdx = checked ? parseInt(checked.value) - 1 : -1;
+        labels.forEach(function(l, i) {
+            l.querySelector('i').classList.toggle('fas', i <= checkedIdx);
+            l.querySelector('i').classList.toggle('far', i > checkedIdx);
+        });
+    });
+});
+</script>
 {% endblock %}

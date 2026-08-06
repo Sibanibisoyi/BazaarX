@@ -56,10 +56,12 @@ def product_detail(request, slug):
     review_count = reviews.count()
     questions = ProductQuestion.objects.filter(product=product).order_by('-created_at')
     user_has_reviewed = False
+    user_review = None
     in_wishlist = False
     can_review = False
     if request.user.is_authenticated:
-        user_has_reviewed = Review.objects.filter(product=product, user=request.user).exists()
+        user_review = Review.objects.filter(product=product, user=request.user).first()
+        user_has_reviewed = user_review is not None
         from extras.models import Wishlist
         in_wishlist = Wishlist.objects.filter(user=request.user, product=product).exists()
         from orders.models import Order
@@ -91,6 +93,7 @@ def product_detail(request, slug):
         'avg_rating': avg_rating,
         'review_count': review_count,
         'user_has_reviewed': user_has_reviewed,
+        'user_review': user_review,
         'can_review': can_review,
         'review_form': review_form,
         'in_wishlist': in_wishlist,
@@ -227,7 +230,7 @@ def category_page(request, slug):
 @login_required
 def submit_review(request, slug):
     product = get_object_or_404(Product, slug=slug)
-    
+
     from orders.models import Order
     can_review = Order.objects.filter(user=request.user, status='delivered', orderitem__product=product).exists()
     if not can_review:
@@ -239,6 +242,9 @@ def submit_review(request, slug):
         messages.info(request, 'You have already reviewed this product')
         return redirect('products:product_detail', slug=slug)
 
+    # Get the order_id to redirect back to the order page after review
+    order_id = request.POST.get('order_id')
+
     if request.method == 'POST':
         form = ReviewForm(request.POST, request.FILES)
         if form.is_valid():
@@ -246,9 +252,13 @@ def submit_review(request, slug):
             review.product = product
             review.user = request.user
             review.save()
-            messages.success(request, 'Review submitted successfully')
+            messages.success(request, f'Your review for "{product.name}" has been submitted!')
+            if order_id:
+                return redirect('orders:order_detail', order_id=order_id)
             return redirect('products:product_detail', slug=slug)
 
+    if order_id:
+        return redirect('orders:order_detail', order_id=order_id)
     return redirect('products:product_detail', slug=slug)
 
 

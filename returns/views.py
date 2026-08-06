@@ -57,27 +57,48 @@ def my_returns(request):
 
 @login_required
 def approve_return(request, return_id):
-    from users.models import WalletTransaction
+    from users.models import WalletTransaction, Wallet
+    from django.utils import timezone
+
     return_request = get_object_or_404(ReturnRequest, id=return_id)
-    return_request.status = 'approved'
-    return_request.save()
-    
-    # Refund to wallet
-    wallet = return_request.user.wallet
-    refund_amount = return_request.order.total_price
+    order = return_request.order
+    refund_amount = order.total_price
+
+    # Determine refund method based on payment method
+    if order.payment_method == 'cod':
+        refund_method = 'cod_wallet'
+    else:
+        # For Razorpay — credit to BazaarX wallet (original source refund requires stored payment_id)
+        refund_method = 'wallet'
+
+    # Credit wallet
+    wallet, _ = Wallet.objects.get_or_create(user=return_request.user)
     wallet.balance += refund_amount
     wallet.save()
-    
+
     WalletTransaction.objects.create(
         wallet=wallet,
         amount=refund_amount,
         transaction_type='credit',
-        description=f'Refund for Return #{return_request.id} (Order #{return_request.order.id})'
+        description=f'Refund for Return #{return_request.id} (Order #{order.id}) — {order.get_payment_method_display()}'
     )
-    
+
+    # Update return request
+    return_request.status = 'approved'
+    return_request.refund_method = refund_method
+    return_request.refunded_at = timezone.now()
+    return_request.save()
+
+    # Update order status to 'returned'
+    order.status = 'returned'
+    order.save()
+
     send_return_approved_email(return_request)
-    messages.success(request, f'Return #{return_id} approved. ₹{refund_amount} refunded to wallet. Notification sent.')
-    return redirect('dashboard:admin_dashboard')
+    messages.success(
+        request,
+        f'Return #{return_id} approved. ₹{refund_amount} refunded to {return_request.user.username}\'s BazaarX Wallet. Order #{order.id} marked as Returned.'
+    )
+    return redirect('dashboard:admin_returns')
 
 
 @login_required
@@ -87,4 +108,4 @@ def reject_return(request, return_id):
     return_request.save()
     send_return_rejected_email(return_request)
     messages.success(request, f'Return #{return_id} rejected — notification sent to {return_request.user.email}.')
-    return redirect('dashboard:admin_dashboard')
+    return redirect('dashboard:admin_returns')

@@ -246,7 +246,7 @@ def password_reset_complete(request):
 
 @login_required
 def my_wallet(request):
-    wallet = request.user.wallet
+    wallet, _ = Wallet.objects.get_or_create(user=request.user)
     transactions = WalletTransaction.objects.filter(wallet=wallet).order_by('-created_at')
     return render(request, 'users/my_wallet.html', {
         'wallet': wallet,

@@ -94,6 +94,9 @@ def place_order(request):
         address = get_object_or_404(Address, id=address_id)
         cart = Cart.objects.get(user=request.user)
         items = cart.cartitem_set.all()
+        if not items:
+            messages.error(request, 'Your cart is empty.')
+            return redirect('cart:cart_detail')
         subtotal = sum(item.effective_price() * item.quantity for item in items)
 
         # Re-apply coupon from session server-side (never trust the client)
@@ -172,8 +175,8 @@ def place_order(request):
             return redirect('orders:order_confirmation', order_id=order.id)
         else:
             return redirect('orders:initiate_payment', order_id=order.id)
+    return redirect('cart:cart_detail')
 
-    
 @login_required
 def order_confirmation(request, order_id):
     order = get_object_or_404(Order ,id=order_id, user=request.user)
@@ -234,11 +237,21 @@ def buy_again(request, order_id):
 
 @login_required
 def order_detail(request, order_id):
-    order = get_object_or_404(Order,id=order_id, user=request.user)
+    order = get_object_or_404(Order, id=order_id, user=request.user)
     items = order.orderitem_set.all()
+
+    # Build a dict of {product_id: review} for items the user has already reviewed
+    reviews_by_product = {}
+    if order.status == 'delivered':
+        from products.models import Review
+        for item in items:
+            review = Review.objects.filter(product=item.product, user=request.user).first()
+            reviews_by_product[item.product.id] = review
+
     return render(request, 'orders/order_detail.html', {
         'order': order,
         'items': items,
+        'reviews_by_product': reviews_by_product,
     })
 
 @login_required

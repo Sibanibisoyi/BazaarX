@@ -53,9 +53,9 @@
             {% for item in items %}
             <tr>
                 <td>{{ item.product.name }}</td>
-                <td>${{ item.price }}</td>
+                <td>₹{{ item.price }}</td>
                 <td>{{ item.quantity }}</td>
-                <td>${{ item.get_cost }}</td>
+                <td>₹{{ item.get_cost }}</td>
             </tr>
             {% empty %}
             <tr>

@@ -212,42 +212,53 @@
     </h3>
 
     {% if request.user.is_authenticated %}
-        {% if not user_has_reviewed %}
-            {% if can_review %}
-            <div class="card border-0 shadow-sm mb-4 rounded-4">
-                <div class="card-header bg-white p-3 border-bottom fw-bold">
-                    <i class="fas fa-star text-warning me-2"></i>Write Your Review
+        {% if can_review and not user_has_reviewed %}
+        <!-- Prompt to write review from order page -->
+        <div class="card border-0 shadow-sm mb-4 rounded-4" style="border-left: 4px solid #ff6000 !important;">
+            <div class="card-body p-4 d-flex align-items-center justify-content-between gap-3 flex-wrap">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-warning-subtle d-flex align-items-center justify-content-center flex-shrink-0" style="width:48px;height:48px;">
+                        <i class="fas fa-star text-warning fs-5"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">You Purchased This Product!</h6>
+                        <p class="text-muted small mb-0">Share your experience — go to <strong>My Orders</strong> to write a review for this item.</p>
+                    </div>
                 </div>
-                <div class="card-body p-4">
-                    <form method="POST" action="{% url 'products:submit_review' product.slug %}" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Rating</label>
-                            {{ review_form.rating }}
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Your Review</label>
-                            {{ review_form.comment }}
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">
-                                <i class="fas fa-camera me-1 text-muted"></i>Add a Photo <span class="text-muted fw-normal small">(optional)</span>
-                            </label>
-                            <input type="file" name="image" class="form-control" accept="image/*" id="reviewImageInput" onchange="previewReviewImage(this)">
-                            <div id="reviewImagePreview" class="mt-2"></div>
-                        </div>
-                        <button type="submit" class="btn btn-primary px-4"><i class="fas fa-paper-plane me-2"></i>Submit Review</button>
-                    </form>
+                <a href="{% url 'orders:my_orders' %}" class="btn btn-primary rounded-pill px-4 fw-semibold flex-shrink-0">
+                    <i class="fas fa-list me-2"></i> Go to My Orders
+                </a>
+            </div>
+        </div>
+        {% elif user_has_reviewed and user_review %}
+        <!-- Already reviewed — show their review card -->
+        <div class="card border-0 shadow-sm mb-4 rounded-4" style="border-left: 4px solid #198754 !important;">
+            <div class="card-header bg-white p-3 border-bottom d-flex align-items-center justify-content-between">
+                <span class="fw-bold"><i class="fas fa-check-circle text-success me-2"></i>Your Review</span>
+                <span class="text-muted small">{{ user_review.created_at|date:"d M Y" }}</span>
+            </div>
+            <div class="card-body p-4">
+                <div class="d-flex text-warning mb-2" style="font-size: 1rem;">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= user_review.rating %}
+                            <i class="fas fa-star"></i>
+                        {% else %}
+                            <i class="far fa-star text-muted"></i>
+                        {% endif %}
+                    {% endfor %}
                 </div>
+                <p class="mb-3">{{ user_review.comment }}</p>
+                {% if user_review.image %}
+                <div class="mb-2">
+                    <a href="{{ user_review.image.url }}" target="_blank" title="View full image">
+                        <img src="{{ user_review.image.url }}" alt="Your review photo"
+                             class="rounded-3 border"
+                             style="max-height: 180px; max-width: 100%; object-fit: cover; cursor: zoom-in;">
+                    </a>
+                </div>
+                {% endif %}
             </div>
-            {% else %}
-            <div class="alert alert-secondary d-flex align-items-center mb-4 border-0">
-                <i class="fas fa-lock fs-5 me-3 text-muted"></i>
-                <p class="mb-0 text-muted">You can only write a review after purchasing and receiving this product.</p>
-            </div>
-            {% endif %}
-        {% else %}
-        <p class="text-muted"><i class="fas fa-check-circle text-success me-1"></i>You have already reviewed this product.</p>
+        </div>
         {% endif %}
     {% else %}
         <p class="text-muted"><a href="{% url 'users:login' %}">Login</a> to write a review.</p>

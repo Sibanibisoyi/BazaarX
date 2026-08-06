@@ -23,5 +23,7 @@ urlpatterns = [
     path('flash-sales/add/', views.add_flash_sale, name='add_flash_sale'),
     path('flash-sales/delete/<int:pk>/', views.delete_flash_sale, name='delete_flash_sale'),
     path('products/image/delete/<int:image_id>/', views.delete_product_image, name='delete_product_image'),
+    path('sellers/', views.admin_sellers, name='admin_sellers'),
+    path('returns/', views.admin_returns, name='admin_returns'),
 ]
 
